@@ -129,6 +129,13 @@ class S {
   String get profileSub => _ru
       ? 'Профиль · кривая эквити · статистика'
       : 'Identity · equity curve · session stats';
+  String get joinCommunity => _ru ? 'Сообщество Desk Club' : 'Join Desk Club';
+  String get joinCommunityBody => _ru
+      ? 'EN-хаб: weekly desk challenge, структура, академия'
+      : 'EN hub: weekly desk challenge, structure talks, academy';
+  String get openCommunity => _ru ? 'Открыть Desk Club' : 'Open Desk Club';
+  String get communityOpenError =>
+      _ru ? 'Не удалось открыть Telegram' : 'Could not open Telegram';
   String get tapPhoto => _ru ? 'Нажми на аватар для фото' : 'Tap avatar for photo';
   String get equityCurve => _ru ? 'КРИВАЯ ЭКВИТИ' : 'EQUITY CURVE';
   String get trades => _ru ? 'СДЕЛКИ' : 'TRADES';

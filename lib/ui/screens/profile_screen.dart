@@ -1,3 +1,4 @@
+import 'package:paper_league/config/app_links.dart';
 import 'package:paper_league/services/analytics.dart';
 import 'package:paper_league/services/desk_audio.dart';
 import 'package:paper_league/state/auth_controller.dart';
@@ -19,6 +20,7 @@ import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -143,6 +145,76 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
                   const Icon(Icons.chevron_right_rounded, color: PlColors.accent),
+                ],
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Material(
+          color: PlColors.accentDim,
+          borderRadius: BorderRadius.circular(PlRadius.md),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(PlRadius.md),
+            onTap: () async {
+              DeskAudio.instance.play(DeskSfx.tap);
+              await Analytics.log('tg_cta_tap', {
+                'source': AppLinks.communitySource,
+                'url': AppLinks.communityUrl,
+              });
+              final uri = Uri.parse(AppLinks.communityUrl);
+              final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+              if (!ok && context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(s.communityOpenError)),
+                );
+              }
+            },
+            child: Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(PlRadius.md),
+                border: Border.all(color: PlColors.accent.withValues(alpha: 0.35)),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: PlColors.accentSoft,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.forum_outlined, color: PlColors.accent, size: 22),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          s.joinCommunity,
+                          style: const TextStyle(
+                            color: PlColors.accent,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.8,
+                            fontSize: 12,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(s.joinCommunityBody, style: Theme.of(context).textTheme.bodySmall),
+                        const SizedBox(height: 2),
+                        Text(
+                          AppLinks.communityHandle,
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: PlColors.accent,
+                                fontWeight: FontWeight.w600,
+                              ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(Icons.open_in_new_rounded, color: PlColors.accent, size: 18),
                 ],
               ),
             ),
