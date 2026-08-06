@@ -49,6 +49,15 @@ void main() {
     expect(desk.timeframe, '5m');
     expect(desk.position, isNotNull);
 
+    await desk.setTimeframe('15m');
+    expect(desk.mark, closeTo(markBefore, 1e-9));
+    expect(desk.position, isNotNull);
+
+    await desk.setTimeframe('30m');
+    expect(desk.mark, closeTo(markBefore, 1e-9));
+    expect(desk.position, isNotNull);
+    expect(desk.timeframe, '30m');
+
     await desk.setTimeframe('1h');
     expect(desk.mark, closeTo(markBefore, 1e-9));
     expect(desk.position, isNotNull);
@@ -57,6 +66,14 @@ void main() {
   test('barsPerDay scales with TF', () {
     expect(MarketFeed.barsPerDay('5m'), 288);
     expect(MarketFeed.barsPerDay('15m'), 96);
+    expect(MarketFeed.barsPerDay('30m'), 48);
     expect(MarketFeed.barsPerDay('1h'), 24);
+  });
+
+  test('binanceInterval maps 15m and 30m', () {
+    expect(MarketFeed.binanceInterval('15m'), '15m');
+    expect(MarketFeed.binanceInterval('30m'), '30m');
+    expect(MarketFeed.stepFor('15m'), const Duration(minutes: 15));
+    expect(MarketFeed.stepFor('30m'), const Duration(minutes: 30));
   });
 }

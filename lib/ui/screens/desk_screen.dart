@@ -307,7 +307,7 @@ class _HeaderStrip extends StatelessWidget {
                   ),
                 ),
               const Spacer(),
-              ...['5m', '15m', '1h'].map((tf) {
+              ...['5m', '15m', '30m', '1h'].map((tf) {
                 final on = desk.timeframe == tf;
                 return Padding(
                   padding: const EdgeInsets.only(left: 6),

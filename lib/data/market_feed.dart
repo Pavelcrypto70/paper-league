@@ -100,12 +100,16 @@ class MarketFeed {
 
   static String binanceInterval(String tf) => switch (tf) {
         '5m' => '5m',
+        '15m' => '15m',
+        '30m' => '30m',
         '1h' => '1h',
         _ => '15m',
       };
 
   static Duration stepFor(String tf) => switch (tf) {
         '5m' => const Duration(minutes: 5),
+        '15m' => const Duration(minutes: 15),
+        '30m' => const Duration(minutes: 30),
         '1h' => const Duration(hours: 1),
         _ => const Duration(minutes: 15),
       };

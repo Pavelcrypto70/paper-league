@@ -9,6 +9,7 @@ import 'package:paper_league/state/desk_controller.dart';
 import 'package:paper_league/theme/theme.dart';
 import 'package:paper_league/theme/tokens.dart';
 import 'package:paper_league/ui/screens/auth_gate_screen.dart';
+import 'package:paper_league/ui/screens/language_gate_screen.dart';
 import 'package:paper_league/ui/screens/shell_screen.dart';
 import 'package:paper_league/ui/screens/splash_screen.dart';
 
@@ -44,7 +45,12 @@ class PaperLeagueApp extends StatelessWidget {
             debugShowCheckedModeBanner: false,
             theme: buildPaperLeagueTheme(),
             locale: loc.locale,
-            supportedLocales: const [Locale('en'), Locale('ru')],
+            supportedLocales: const [
+              Locale('en'),
+              Locale('es'),
+              Locale('pt'),
+              Locale('ru'),
+            ],
             localizationsDelegates: const [
               GlobalMaterialLocalizations.delegate,
               GlobalWidgetsLocalizations.delegate,
@@ -73,16 +79,37 @@ class _RootState extends State<_Root> {
     if (_onlineBound) return;
     final auth = context.read<AuthController>();
     final desk = context.read<DeskController>();
-    if (auth.phase != AuthPhase.ready && auth.phase != AuthPhase.needsGate) return;
+    if (auth.phase != AuthPhase.ready && auth.phase != AuthPhase.needsGate) {
+      return;
+    }
     if (auth.phase == AuthPhase.ready) {
       _onlineBound = true;
-      await desk.bindOnline(auth.league, live: auth.onlineConfigured && auth.isSignedIn);
+      await desk.bindOnline(
+        auth.league,
+        live: auth.onlineConfigured && auth.isSignedIn,
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final locale = context.watch<LocaleController>();
     final auth = context.watch<AuthController>();
+
+    // Do not reveal splash (or its previous locale) until stored language
+    // choice has been loaded.
+    if (!locale.ready) {
+      return const Scaffold(
+        backgroundColor: PlColors.bg,
+        body: Center(child: CircularProgressIndicator(color: PlColors.accent)),
+      );
+    }
+
+    if (!locale.languageChosen) {
+      return LanguageGateScreen(
+        onPick: context.read<LocaleController>().chooseLanguage,
+      );
+    }
 
     if (!_splashDone) {
       return SplashScreen(
@@ -103,10 +130,11 @@ class _RootState extends State<_Root> {
       return AuthGateScreen(
         onReady: () async {
           await context.read<DeskController>().bindOnline(
-                context.read<AuthController>().league,
-                live: context.read<AuthController>().onlineConfigured &&
-                    context.read<AuthController>().isSignedIn,
-              );
+            context.read<AuthController>().league,
+            live:
+                context.read<AuthController>().onlineConfigured &&
+                context.read<AuthController>().isSignedIn,
+          );
           setState(() => _onlineBound = true);
         },
       );

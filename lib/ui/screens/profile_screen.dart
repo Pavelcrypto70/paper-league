@@ -35,7 +35,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    _nick = TextEditingController(text: context.read<DeskController>().nickname);
+    _nick = TextEditingController(
+      text: context.read<DeskController>().nickname,
+    );
   }
 
   @override
@@ -62,7 +64,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final desk = context.watch<DeskController>();
     final loc = context.watch<LocaleController>();
     final s = S.of(context);
-    final retColor = desk.returnFromStartPct >= 0 ? PlColors.bull : PlColors.bear;
+    final retColor = desk.returnFromStartPct >= 0
+        ? PlColors.bull
+        : PlColors.bear;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
@@ -78,7 +82,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 onPressed: () {
                   DeskAudio.instance.play(DeskSfx.tap);
                   Navigator.of(context).push(
-                    MaterialPageRoute<void>(builder: (_) => const TapeDrillScreen()),
+                    MaterialPageRoute<void>(
+                      builder: (_) => const TapeDrillScreen(),
+                    ),
                   );
                 },
                 icon: const Icon(Icons.slow_motion_video_rounded, size: 18),
@@ -112,7 +118,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(PlRadius.md),
-                border: Border.all(color: PlColors.accent.withValues(alpha: 0.35)),
+                border: Border.all(
+                  color: PlColors.accent.withValues(alpha: 0.35),
+                ),
               ),
               child: Row(
                 children: [
@@ -123,7 +131,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       color: PlColors.accentSoft,
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(Icons.menu_book_rounded, color: PlColors.accent, size: 22),
+                    child: const Icon(
+                      Icons.menu_book_rounded,
+                      color: PlColors.accent,
+                      size: 22,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -140,11 +152,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                         ),
                         const SizedBox(height: 2),
-                        Text(s.guideCta, style: Theme.of(context).textTheme.bodySmall),
+                        Text(
+                          s.guideCta,
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
                       ],
                     ),
                   ),
-                  const Icon(Icons.chevron_right_rounded, color: PlColors.accent),
+                  const Icon(
+                    Icons.chevron_right_rounded,
+                    color: PlColors.accent,
+                  ),
                 ],
               ),
             ),
@@ -163,18 +181,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 'url': AppLinks.communityUrl,
               });
               final uri = Uri.parse(AppLinks.communityUrl);
-              final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+              final ok = await launchUrl(
+                uri,
+                mode: LaunchMode.externalApplication,
+              );
               if (!ok && context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(s.communityOpenError)),
-                );
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text(s.communityOpenError)));
               }
             },
             child: Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(PlRadius.md),
-                border: Border.all(color: PlColors.accent.withValues(alpha: 0.35)),
+                border: Border.all(
+                  color: PlColors.accent.withValues(alpha: 0.35),
+                ),
               ),
               child: Row(
                 children: [
@@ -185,7 +208,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       color: PlColors.accentSoft,
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(Icons.forum_outlined, color: PlColors.accent, size: 22),
+                    child: const Icon(
+                      Icons.forum_outlined,
+                      color: PlColors.accent,
+                      size: 22,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -202,11 +229,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                         ),
                         const SizedBox(height: 2),
-                        Text(s.joinCommunityBody, style: Theme.of(context).textTheme.bodySmall),
+                        Text(
+                          s.joinCommunityBody,
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
                         const SizedBox(height: 2),
                         Text(
                           AppLinks.communityHandle,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
                                 color: PlColors.accent,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -214,7 +245,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ],
                     ),
                   ),
-                  const Icon(Icons.open_in_new_rounded, color: PlColors.accent, size: 18),
+                  const Icon(
+                    Icons.open_in_new_rounded,
+                    color: PlColors.accent,
+                    size: 18,
+                  ),
                 ],
               ),
             ),
@@ -245,7 +280,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       color: PlColors.surface2,
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(Icons.insights_rounded, color: PlColors.accent, size: 22),
+                    child: const Icon(
+                      Icons.insights_rounded,
+                      color: PlColors.accent,
+                      size: 22,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -262,11 +301,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                         ),
                         const SizedBox(height: 2),
-                        Text(s.weeklyReportCta, style: Theme.of(context).textTheme.bodySmall),
+                        Text(
+                          s.weeklyReportCta,
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
                       ],
                     ),
                   ),
-                  const Icon(Icons.chevron_right_rounded, color: PlColors.muted),
+                  const Icon(
+                    Icons.chevron_right_rounded,
+                    color: PlColors.muted,
+                  ),
                 ],
               ),
             ),
@@ -279,24 +324,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
             children: [
               Text(s.language, style: Theme.of(context).textTheme.labelSmall),
               const SizedBox(height: 10),
-              Row(
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
                 children: [
-                  Expanded(
-                    child: _LangChip(
-                      label: s.english,
-                      on: !loc.isRu,
-                      onTap: () => loc.setCode('en'),
+                  for (final language in AppLang.values)
+                    _LangChip(
+                      label: language.nativeLabel,
+                      on: loc.lang == language,
+                      onTap: () => loc.setCode(language.code),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _LangChip(
-                      label: s.russian,
-                      on: loc.isRu,
-                      onTap: () => loc.setCode('ru'),
-                    ),
-                  ),
                 ],
+              ),
+              const SizedBox(height: 8),
+              TextButton.icon(
+                onPressed: () => loc.resetLanguageChoice(),
+                icon: const Icon(Icons.restart_alt_rounded, size: 18),
+                label: Text(
+                  s.t(
+                    'Choose language from start',
+                    es: 'Elegir idioma desde el inicio',
+                    pt: 'Escolher idioma desde o início',
+                    ru: 'Выбрать язык с начала',
+                  ),
+                ),
               ),
               Consumer<AuthController>(
                 builder: (context, auth, _) {
@@ -318,12 +369,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             content: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                TextField(controller: email, decoration: InputDecoration(labelText: s.email)),
-                                TextField(controller: pass, obscureText: true, decoration: InputDecoration(labelText: s.password)),
+                                TextField(
+                                  controller: email,
+                                  decoration: InputDecoration(
+                                    labelText: s.email,
+                                  ),
+                                ),
+                                TextField(
+                                  controller: pass,
+                                  obscureText: true,
+                                  decoration: InputDecoration(
+                                    labelText: s.password,
+                                  ),
+                                ),
                               ],
                             ),
                             actions: [
-                              TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(s.back)),
+                              TextButton(
+                                onPressed: () => Navigator.pop(ctx, false),
+                                child: Text(s.back),
+                              ),
                               FilledButton(
                                 onPressed: () => Navigator.pop(ctx, true),
                                 child: Text(s.signUp),
@@ -332,7 +397,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                         );
                         if (ok == true && context.mounted) {
-                          await auth.signUpEmail(email.text, pass.text, nickname: desk.nickname);
+                          await auth.signUpEmail(
+                            email.text,
+                            pass.text,
+                            nickname: desk.nickname,
+                          );
                         }
                       },
                       child: Text(s.upgradeAccount),
@@ -374,7 +443,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         if (v.trim().length >= 2) desk.setNickname(v);
                       },
                     ),
-                    Text(s.tapPhoto, style: Theme.of(context).textTheme.bodySmall),
+                    Text(
+                      s.tapPhoto,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
                     const SizedBox(height: 8),
                     Wrap(
                       spacing: 8,
@@ -387,8 +459,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             height: 20,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: HSLColor.fromAHSL(1, h.toDouble(), 0.55, 0.42).toColor(),
-                              border: Border.all(color: on ? PlColors.text : Colors.transparent, width: 2),
+                              color: HSLColor.fromAHSL(
+                                1,
+                                h.toDouble(),
+                                0.55,
+                                0.42,
+                              ).toColor(),
+                              border: Border.all(
+                                color: on ? PlColors.text : Colors.transparent,
+                                width: 2,
+                              ),
                             ),
                           ),
                         );
@@ -408,9 +488,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
             children: [
               Row(
                 children: [
-                  Text(s.equityCurve, style: Theme.of(context).textTheme.labelSmall),
+                  Text(
+                    s.equityCurve,
+                    style: Theme.of(context).textTheme.labelSmall,
+                  ),
                   const Spacer(),
-                  Text(money(desk.equity), style: Theme.of(context).textTheme.titleMedium),
+                  Text(
+                    money(desk.equity),
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
                 ],
               ),
               const SizedBox(height: 12),
@@ -427,10 +513,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
           crossAxisSpacing: 8,
           childAspectRatio: 1.5,
           children: [
-            PlStatTile(label: s.trades, value: '${desk.tradesCount}', sub: '${desk.winsCount}W / ${desk.lossesCount}L'),
-            PlStatTile(label: s.winRate, value: '${desk.winRatePct.toStringAsFixed(1)}%', color: PlColors.bull, sub: s.ofClosed),
-            PlStatTile(label: s.lossRate, value: '${desk.lossRatePct.toStringAsFixed(1)}%', color: PlColors.bear, sub: s.ofClosed),
-            PlStatTile(label: s.fromStart, value: pctPoints(desk.returnFromStartPct), color: retColor, sub: s.vsStart),
+            PlStatTile(
+              label: s.trades,
+              value: '${desk.tradesCount}',
+              sub: '${desk.winsCount}W / ${desk.lossesCount}L',
+            ),
+            PlStatTile(
+              label: s.winRate,
+              value: '${desk.winRatePct.toStringAsFixed(1)}%',
+              color: PlColors.bull,
+              sub: s.ofClosed,
+            ),
+            PlStatTile(
+              label: s.lossRate,
+              value: '${desk.lossRatePct.toStringAsFixed(1)}%',
+              color: PlColors.bear,
+              sub: s.ofClosed,
+            ),
+            PlStatTile(
+              label: s.fromStart,
+              value: pctPoints(desk.returnFromStartPct),
+              color: retColor,
+              sub: s.vsStart,
+            ),
           ],
         ),
         const SizedBox(height: 12),
@@ -485,7 +590,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
               contentPadding: EdgeInsets.zero,
               onTap: () => showRecapSheet(context, t),
               title: Text('${t.symbol} ${t.side.name.toUpperCase()}'),
-              subtitle: Text(money(t.pnl), style: TextStyle(color: c, fontSize: 12)),
+              subtitle: Text(
+                money(t.pnl),
+                style: TextStyle(color: c, fontSize: 12),
+              ),
               trailing: Text(
                 '${t.rMultiple >= 0 ? '+' : ''}${t.rMultiple.toStringAsFixed(2)}R',
                 style: TextStyle(color: c, fontWeight: FontWeight.w700),
@@ -504,10 +612,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   title: Text(ds.resetTitle),
                   content: Text(ds.resetBody),
                   actions: [
-                    TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(ds.cancel)),
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx, false),
+                      child: Text(ds.cancel),
+                    ),
                     TextButton(
                       onPressed: () => Navigator.pop(ctx, true),
-                      child: Text(ds.reset, style: const TextStyle(color: PlColors.bear)),
+                      child: Text(
+                        ds.reset,
+                        style: const TextStyle(color: PlColors.bear),
+                      ),
                     ),
                   ],
                 );
@@ -527,7 +641,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       padding: EdgeInsets.only(bottom: last ? 0 : 12),
       child: Row(
         children: [
-          Expanded(child: Text(k, style: Theme.of(context).textTheme.bodyMedium)),
+          Expanded(
+            child: Text(k, style: Theme.of(context).textTheme.bodyMedium),
+          ),
           Text(v, style: Theme.of(context).textTheme.titleMedium),
         ],
       ),

@@ -43,7 +43,7 @@ List<GuideSlide> buildGuideSlides({required bool ru}) {
         body: 'Всё важное сверху: рынок, цена, метрики. График — центр. Снизу — вход в сделку или управление позицией.',
         points: [
           GuidePoint(label: 'Символ + VOL%', detail: 'Тап открывает топ рынков по суточной волатильности.'),
-          GuidePoint(label: '5m / 15m / 1h', detail: 'Таймфрейм свечей (цена и позиция сохраняются).'),
+          GuidePoint(label: '5m / 15m / 30m / 1h', detail: 'Таймфрейм свечей (цена и позиция сохраняются).'),
           GuidePoint(label: 'EQUITY / SESSION / MAX DD / DISC', detail: 'Счёт, сессия, макс. просадка, очки дисциплины.'),
           GuidePoint(label: 'LONG / SHORT', detail: 'Открывает тикет ордера. Если позиция уже есть — кнопка «Закрыть всё».'),
         ],
@@ -144,7 +144,7 @@ List<GuideSlide> buildGuideSlides({required bool ru}) {
       body: 'Market, mark, and metrics up top. Chart is the stage. Bottom = open ticket or manage risk.',
       points: [
         GuidePoint(label: 'Symbol + VOL%', detail: 'Tap for top markets by 24h range volatility.'),
-          GuidePoint(label: '5m / 15m / 1h', detail: 'Candle timeframe (mark & open risk stay continuous).'),
+          GuidePoint(label: '5m / 15m / 30m / 1h', detail: 'Candle timeframe (mark & open risk stay continuous).'),
         GuidePoint(label: 'EQUITY / SESSION / MAX DD / DISC', detail: 'Book, session PnL, peak drawdown, discipline.'),
         GuidePoint(label: 'LONG / SHORT', detail: 'Opens the order ticket. With a position open → Close all.'),
       ],

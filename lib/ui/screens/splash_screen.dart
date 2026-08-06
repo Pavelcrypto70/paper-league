@@ -3,7 +3,6 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
 import 'package:paper_league/l10n/s.dart';
 import 'package:paper_league/theme/tokens.dart';
 
@@ -79,7 +78,6 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
   @override
   Widget build(BuildContext context) {
     final s = S.of(context);
-    final loc = context.watch<LocaleController>();
     final reduce = MediaQuery.disableAnimationsOf(context);
 
     return Scaffold(
@@ -173,11 +171,6 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                               ),
                         ),
                         const Spacer(),
-                        _LangToggle(
-                          isRu: loc.isRu,
-                          onEn: () => loc.setCode('en'),
-                          onRu: () => loc.setCode('ru'),
-                        ),
                       ],
                     ),
                   ),
@@ -311,53 +304,6 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
           ),
         ],
       ),
-    );
-  }
-}
-
-class _LangToggle extends StatelessWidget {
-  const _LangToggle({
-    required this.isRu,
-    required this.onEn,
-    required this.onRu,
-  });
-
-  final bool isRu;
-  final VoidCallback onEn;
-  final VoidCallback onRu;
-
-  @override
-  Widget build(BuildContext context) {
-    Widget chip(String label, bool on, VoidCallback tap) {
-      return GestureDetector(
-        onTap: tap,
-        child: AnimatedContainer(
-          duration: PlMotion.micro,
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          decoration: BoxDecoration(
-            color: on ? PlColors.accentSoft : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: on ? PlColors.accent.withValues(alpha: 0.5) : PlColors.lineSoft),
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w800,
-              color: on ? PlColors.accent : PlColors.faint,
-              letterSpacing: 0.4,
-            ),
-          ),
-        ),
-      );
-    }
-
-    return Row(
-      children: [
-        chip('EN', !isRu, onEn),
-        const SizedBox(width: 6),
-        chip('RU', isRu, onRu),
-      ],
     );
   }
 }
