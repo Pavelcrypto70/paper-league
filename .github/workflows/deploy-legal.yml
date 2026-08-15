@@ -1,0 +1,31 @@
+name: Deploy legal HTML
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [master, main]
+    paths:
+      - web/privacy.html
+      - web/terms.html
+      - .github/workflows/deploy-legal.yml
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  legal:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Stage privacy + terms
+        run: |
+          mkdir -p dist
+          cp web/privacy.html dist/privacy.html
+          cp web/terms.html dist/terms.html
+      - uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          keep_files: true

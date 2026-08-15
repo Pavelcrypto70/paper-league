@@ -349,6 +349,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
               ),
+              TextButton(
+                onPressed: () => launchUrl(
+                  Uri.parse(AppLinks.privacyUrl),
+                  mode: LaunchMode.externalApplication,
+                ),
+                child: Text(s.privacyPolicy),
+              ),
+              TextButton(
+                onPressed: () => launchUrl(
+                  Uri.parse(AppLinks.termsUrl),
+                  mode: LaunchMode.externalApplication,
+                ),
+                child: Text(s.termsOfService),
+              ),
               Consumer<AuthController>(
                 builder: (context, auth, _) {
                   if (!auth.onlineConfigured || !auth.isAnonymous) {

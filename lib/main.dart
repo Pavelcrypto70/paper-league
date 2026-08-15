@@ -10,6 +10,7 @@ import 'package:paper_league/theme/theme.dart';
 import 'package:paper_league/theme/tokens.dart';
 import 'package:paper_league/ui/screens/auth_gate_screen.dart';
 import 'package:paper_league/ui/screens/language_gate_screen.dart';
+import 'package:paper_league/ui/screens/legal_gate_screen.dart';
 import 'package:paper_league/ui/screens/shell_screen.dart';
 import 'package:paper_league/ui/screens/splash_screen.dart';
 
@@ -109,6 +110,10 @@ class _RootState extends State<_Root> {
       return LanguageGateScreen(
         onPick: context.read<LocaleController>().chooseLanguage,
       );
+    }
+
+    if (!locale.disclaimerAccepted) {
+      return const LegalGateScreen();
     }
 
     if (!_splashDone) {

@@ -22,9 +22,11 @@ class LocaleController extends ChangeNotifier {
 
   static const _langKey = 'lang';
   static const _langChosenKey = 'lang_chosen_v1';
+  static const _disclaimerKey = 'disclaimer_accepted_v1';
 
   Locale locale = const Locale('en');
   bool languageChosen = false;
+  bool disclaimerAccepted = false;
   bool ready = false;
 
   bool get isRu => locale.languageCode == 'ru';
@@ -33,6 +35,7 @@ class LocaleController extends ChangeNotifier {
   Future<void> load() async {
     final p = await SharedPreferences.getInstance();
     languageChosen = p.getBool(_langChosenKey) ?? false;
+    disclaimerAccepted = p.getBool(_disclaimerKey) ?? false;
     // A previously saved locale is only meaningful after the user has
     // explicitly completed the language gate.
     locale = Locale(
@@ -54,11 +57,20 @@ class LocaleController extends ChangeNotifier {
 
   Future<void> chooseLanguage(AppLang lang) => setCode(lang.code);
 
+  Future<void> acceptDisclaimer() async {
+    final p = await SharedPreferences.getInstance();
+    await p.setBool(_disclaimerKey, true);
+    disclaimerAccepted = true;
+    notifyListeners();
+  }
+
   Future<void> resetLanguageChoice() async {
     languageChosen = false;
+    disclaimerAccepted = false;
     locale = const Locale('en');
     final p = await SharedPreferences.getInstance();
     await p.setBool(_langChosenKey, false);
+    await p.setBool(_disclaimerKey, false);
     notifyListeners();
   }
 }
@@ -367,6 +379,42 @@ class S {
     es: _es('Simulation · no real money'),
     pt: _pt('Simulation · no real money'),
     ru: 'Симуляция · без реальных денег',
+  );
+  String get legalTitle => t(
+    'Before you continue',
+    es: 'Antes de continuar',
+    pt: 'Antes de continuar',
+    ru: 'Перед продолжением',
+  );
+  String get legalBody => t(
+    'Paper League is a paper-trading simulator for practice and discipline. It is not a broker, not a signal service, and not financial advice. No real money is used. Markets can cause loss. You are responsible for your decisions.',
+    es: 'Paper League es un simulador de trading para practicar disciplina. No es un bróker, ni un servicio de señales, ni asesoramiento financiero. No se usa dinero real. Los mercados pueden generar pérdidas. Tú eres responsable de tus decisiones.',
+    pt: 'Paper League é um simulador de trading para praticar disciplina. Não é uma corretora, nem um serviço de sinais, nem aconselhamento financeiro. Não se usa dinheiro real. Mercados podem gerar perdas. Você é responsável pelas suas decisões.',
+    ru: 'Paper League — симулятор бумажной торговли для практики дисциплины. Это не брокер, не сигнальный сервис и не финансовый совет. Реальных денег нет. Рынки могут приносить убытки. Решения — на тебе.',
+  );
+  String get acceptDisclaimer => t(
+    'I understand this app is educational simulation only and not financial advice.',
+    es: 'Entiendo que esta aplicación es solo una simulación educativa y no constituye asesoramiento financiero.',
+    pt: 'Entendo que este app é apenas uma simulação educacional e não constitui aconselhamento financeiro.',
+    ru: 'Я понимаю: это образовательная симуляция, а не финансовая рекомендация.',
+  );
+  String get enterDesk => t(
+    'Enter desk',
+    es: 'Entrar al desk',
+    pt: 'Entrar no desk',
+    ru: 'Войти на деск',
+  );
+  String get privacyPolicy => t(
+    'Privacy Policy',
+    es: 'Política de privacidad',
+    pt: 'Política de privacidade',
+    ru: 'Политика конфиденциальности',
+  );
+  String get termsOfService => t(
+    'Terms of Service',
+    es: 'Términos de servicio',
+    pt: 'Termos de serviço',
+    ru: 'Условия использования',
   );
   String get splashMark => 'PAPER LEAGUE';
   String get splashTag => t(
