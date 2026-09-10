@@ -47,7 +47,7 @@ class DailyDeskStrip extends StatelessWidget {
                 ),
                 const Spacer(),
                 Text(
-                  '${s.streakLabel} ${desk.meta.loginStreak} · ${desk.meta.credits}c',
+              '${s.streakLabel} ${desk.meta.loginStreak}',
                   style: const TextStyle(
                     fontWeight: FontWeight.w700,
                     fontSize: 11,

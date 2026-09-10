@@ -23,6 +23,7 @@ class _TapeDrillScreenState extends State<TapeDrillScreen> {
   bool _decided = false;
   bool _revealed = false;
   bool _showResult = false;
+  bool _tapeVisible = false;
   TapeDrillResult? _result;
   DrillDecision? _decision;
   double? _stop;
@@ -79,8 +80,9 @@ class _TapeDrillScreenState extends State<TapeDrillScreen> {
       _decided = false;
       _revealed = false;
       _showResult = false;
+      _tapeVisible = false;
       _result = null;
-      _decision = null;
+      _decision = round.suggested;
       _stop = null;
       _tp = null;
       _stopAtr = 1.2;
@@ -183,155 +185,71 @@ class _TapeDrillScreenState extends State<TapeDrillScreen> {
                 children: [
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                    child: Text(s.tapeDrillHelp, style: Theme.of(context).textTheme.bodySmall),
-                  ),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: _DrillChart(
-                        candles: round.candles,
-                        endIndex: _scrub,
-                        hideFrom: round.hideFrom,
-                        revealed: _revealed,
-                        entry: _decided ? round.decisionBar.close : null,
-                        stop: _stop,
-                        tp: _tp,
-                        side: _decision == DrillDecision.long
-                            ? Side.long
-                            : _decision == DrillDecision.short
-                                ? Side.short
-                                : null,
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(s.drillQuestTitle, style: const TextStyle(fontWeight: FontWeight.w800, color: PlColors.accent)),
+                        const SizedBox(height: 4),
+                        Text(
+                          round.suggested == DrillDecision.long ? s.drillQuestLong('') : s.drillQuestShort(''),
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                      ],
                     ),
                   ),
-                  if (!_decided) ...[
+                  if (!_tapeVisible)
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Row(
-                        children: [
-                          Text(S.of(context).scrub, style: Theme.of(context).textTheme.labelSmall),
-                          Expanded(
-                            child: Slider(
-                              value: _scrub.toDouble(),
-                              min: math.max(20, round.hideFrom - 55).toDouble(),
-                              max: round.hideFrom.toDouble(),
-                              onChanged: (v) => setState(() => _scrub = v.round()),
-                            ),
-                          ),
-                          Text(
-                            '$_scrub',
-                            style: const TextStyle(
-                              fontFeatures: [FontFeature.tabularFigures()],
-                              color: PlColors.muted,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('${s.stopAtr} ${_stopAtr.toStringAsFixed(1)}', style: Theme.of(context).textTheme.labelSmall),
-                                Slider(
-                                  value: _stopAtr,
-                                  min: 0.6,
-                                  max: 2.4,
-                                  divisions: 18,
-                                  onChanged: (v) {
-                                    setState(() => _stopAtr = v);
-                                    if (_decision == DrillDecision.long || _decision == DrillDecision.short) {
-                                      _planLevels(_decision!);
-                                    }
-                                  },
-                                ),
-                              ],
-                            ),
-                          ),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('${s.tpR} ${_tpR.toStringAsFixed(1)}', style: Theme.of(context).textTheme.labelSmall),
-                                Slider(
-                                  value: _tpR,
-                                  min: 1.0,
-                                  max: 3.5,
-                                  divisions: 10,
-                                  onChanged: (v) {
-                                    setState(() => _tpR = v);
-                                    if (_decision == DrillDecision.long || _decision == DrillDecision.short) {
-                                      _planLevels(_decision!);
-                                    }
-                                  },
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton(
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: PlColors.bull,
-                                side: BorderSide(color: _decision == DrillDecision.long ? PlColors.bull : PlColors.line),
-                              ),
-                              onPressed: () {
-                                DeskAudio.instance.play(DeskSfx.tap);
-                                setState(() => _scrub = round.hideFrom);
-                                _planLevels(DrillDecision.long);
-                              },
-                              child: Text(s.long),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: OutlinedButton(
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: PlColors.bear,
-                                side: BorderSide(color: _decision == DrillDecision.short ? PlColors.bear : PlColors.line),
-                              ),
-                              onPressed: () {
-                                DeskAudio.instance.play(DeskSfx.tap);
-                                setState(() => _scrub = round.hideFrom);
-                                _planLevels(DrillDecision.short);
-                              },
-                              child: Text(s.short),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: () {
-                                DeskAudio.instance.play(DeskSfx.tap);
-                                setState(() {
-                                  _decision = DrillDecision.skip;
-                                  _stop = null;
-                                  _tp = null;
-                                  _scrub = round.hideFrom;
-                                });
-                              },
-                              child: Text(s.skip),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                       child: FilledButton(
-                        onPressed: _decision == null ? null : _commit,
-                        child: Text(s.revealTape),
+                        onPressed: () {
+                          DeskAudio.instance.play(DeskSfx.tap);
+                          setState(() {
+                            _tapeVisible = true;
+                            _scrub = round.hideFrom;
+                            _planLevels(round.suggested);
+                          });
+                        },
+                        child: Text(s.drillShowTape),
+                      ),
+                    )
+                  else
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Column(
+                          children: [
+                            Text(s.drillLookHere, style: Theme.of(context).textTheme.labelSmall),
+                            const SizedBox(height: 6),
+                            Expanded(
+                              child: _DrillChart(
+                                candles: round.candles,
+                                endIndex: _scrub,
+                                hideFrom: round.hideFrom,
+                                revealed: _revealed,
+                                entry: _decided ? round.decisionBar.close : null,
+                                stop: _stop,
+                                tp: _tp,
+                                side: _decision == DrillDecision.long
+                                    ? Side.long
+                                    : _decision == DrillDecision.short
+                                        ? Side.short
+                                        : null,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  if (_tapeVisible && !_decided) ...[
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                      child: FilledButton(
+                        onPressed: () {
+                          DeskAudio.instance.play(DeskSfx.tap);
+                          if (_decision == null) _planLevels(round.suggested);
+                          _commit();
+                        },
+                        child: Text(s.drillPutStop),
                       ),
                     ),
                   ] else if (_showResult && _result != null) ...[
@@ -365,21 +283,15 @@ class _TapeDrillScreenState extends State<TapeDrillScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                '+${_result!.processScore} ${s.processPts}',
+                                s.drillPtsWhy(_result!.processScore),
                                 style: const TextStyle(
                                   color: PlColors.accent,
                                   fontWeight: FontWeight.w900,
-                                  fontSize: 28,
+                                  fontSize: 18,
                                   letterSpacing: -0.5,
                                 ),
                               ),
                               const SizedBox(height: 6),
-                              Text(
-                                '${_result!.outcome.name.toUpperCase()} · '
-                                '${_result!.rMultiple >= 0 ? '+' : ''}${_result!.rMultiple.toStringAsFixed(2)}R',
-                                style: Theme.of(context).textTheme.titleMedium,
-                              ),
-                              const SizedBox(height: 8),
                               Text(_result!.tip(s.isRu), style: Theme.of(context).textTheme.bodyMedium),
                               const SizedBox(height: 14),
                               Row(
@@ -394,7 +306,7 @@ class _TapeDrillScreenState extends State<TapeDrillScreen> {
                                   Expanded(
                                     child: FilledButton(
                                       onPressed: _newRound,
-                                      child: Text(s.nextDrill),
+                                      child: Text(s.drillTryAgain),
                                     ),
                                   ),
                                 ],

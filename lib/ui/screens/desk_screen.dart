@@ -9,7 +9,7 @@ import 'package:paper_league/theme/tokens.dart';
 import 'package:paper_league/ui/format.dart';
 import 'package:paper_league/ui/widgets/candle_chart.dart';
 import 'package:paper_league/ui/widgets/daily_desk_strip.dart';
-import 'package:paper_league/ui/widgets/first_run_coach.dart';
+import 'package:paper_league/ui/widgets/pulse_target.dart';
 import 'package:paper_league/ui/widgets/order_sheet.dart';
 import 'package:paper_league/ui/widgets/playbooks_sheet.dart';
 import 'package:paper_league/ui/widgets/watchlist_sheet.dart';
@@ -24,7 +24,6 @@ class DeskScreen extends StatefulWidget {
 class _DeskScreenState extends State<DeskScreen> {
   ChartTool _tool = ChartTool.pointer;
   int _clearToken = 0;
-  bool _firstRunShown = false;
   Color? _juiceFlash;
 
   @override
@@ -111,15 +110,7 @@ class _DeskScreenState extends State<DeskScreen> {
     if (loading) return const _Skeleton();
 
     final desk = context.watch<DeskController>();
-    if (!desk.firstRunHintDone && !_firstRunShown) {
-      _firstRunShown = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) async {
-        if (!mounted) return;
-        await showFirstRunCoach(context);
-        if (!mounted) return;
-        await desk.completeFirstRunHint();
-      });
-    }
+    final gesture = !desk.firstGestureDone;
 
     return Stack(
       children: [
@@ -134,22 +125,24 @@ class _DeskScreenState extends State<DeskScreen> {
                   style: const TextStyle(color: PlColors.warn, fontWeight: FontWeight.w700, fontSize: 12),
                 ),
               ),
-            const DailyDeskStrip(),
-            _DrawBar(
-              tool: _tool,
-              onTool: (t) {
-                DeskAudio.instance.play(DeskSfx.tap);
-                setState(() => _tool = t);
-              },
-              onClear: () {
-                DeskAudio.instance.play(DeskSfx.tap);
-                context.read<DeskController>().clearPlaybookLevels();
-                setState(() => _clearToken++);
-              },
-            ),
+            if (!gesture) const DailyDeskStrip(),
+            if (!gesture)
+              _DrawBar(
+                tool: _tool,
+                onTool: (t) {
+                  DeskAudio.instance.play(DeskSfx.tap);
+                  setState(() => _tool = t);
+                },
+                onClear: () {
+                  DeskAudio.instance.play(DeskSfx.tap);
+                  context.read<DeskController>().clearPlaybookLevels();
+                  setState(() => _clearToken++);
+                },
+              ),
             Expanded(child: _Chart(tool: _tool, clearToken: _clearToken)),
-            const _CoachBanner(),
+            if (!gesture) const _CoachBanner(),
             const _PositionDock(),
+            if (gesture) const _GestureBanner(),
             _Actions(onTicket: _openTicket),
           ],
         ),
@@ -345,7 +338,7 @@ class _HeaderStrip extends StatelessWidget {
               _Stat(label: s.equity, value: money0(desk.equity)),
               _Stat(label: s.session, value: pctPoints(desk.dayPnlPct), color: pnl),
               _Stat(label: s.maxDd, value: pctPoints(-desk.maxDrawdown)),
-              _Stat(label: s.disc, value: '${desk.discipline}', color: PlColors.accent),
+              _Stat(label: s.disc, value: desk.processDisplay, color: PlColors.accent),
             ],
           ),
         ],
@@ -590,7 +583,7 @@ class _Chart extends StatelessWidget {
         key: ValueKey('chart-${desk.activeSymbol}-${desk.timeframe}'),
         candles: desk.candles,
         entry: show ? pos.entry : pb?.entry,
-        stop: show ? pos.stop : pb?.stop,
+        stop: show && !(desk.tutorialTrade && !desk.tutorialStopSet) ? pos.stop : pb?.stop,
         tp: show ? pos.tp : pb?.tp,
         side: show ? pos.side : pb?.side,
         tool: tool,
@@ -654,24 +647,29 @@ class _PositionDock extends StatelessWidget {
                       style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w600),
                     ),
                     Text(
-                      'SL ${priceFmt(pos.stop)}${pos.tp != null ? ' · TP ${priceFmt(pos.tp!)}' : ''}',
+                      desk.tutorialTrade && !desk.tutorialStopSet
+                          ? S.of(context).gestureStopHint
+                          : 'SL ${priceFmt(pos.stop)}${pos.tp != null ? ' · TP ${priceFmt(pos.tp!)}' : ''}',
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                   ],
                 ),
               ),
               TextButton(
-                onPressed: () {
-                  DeskAudio.instance.play(DeskSfx.tap);
-                  desk.closePosition();
-                  HapticFeedback.mediumImpact();
-                },
+                onPressed: desk.tutorialTrade && !desk.tutorialStopSet
+                    ? null
+                    : () {
+                        DeskAudio.instance.play(DeskSfx.tap);
+                        desk.closePosition();
+                        HapticFeedback.mediumImpact();
+                      },
                 style: TextButton.styleFrom(foregroundColor: PlColors.bear),
                 child: Text(s.close),
               ),
             ],
           ),
           const SizedBox(height: 6),
+          if (!(desk.tutorialTrade && !desk.tutorialStopSet))
           Row(
             children: [
               Expanded(
@@ -713,25 +711,38 @@ class _Actions extends StatelessWidget {
     final desk = context.watch<DeskController>();
     final s = S.of(context);
     final open = desk.position != null;
+    final needStop = desk.tutorialTrade && !desk.tutorialStopSet;
+    final needClose = desk.tutorialTrade && desk.tutorialStopSet && open;
 
     return SafeArea(
       top: false,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(PlSpace.lg, 10, PlSpace.lg, 10),
         child: open
-            ? SizedBox(
-                height: 52,
-                child: FilledButton(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: PlColors.bear,
-                    foregroundColor: PlColors.onBear,
+            ? PulseTarget(
+                active: needStop || needClose,
+                child: SizedBox(
+                  height: 52,
+                  child: FilledButton(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: needStop ? PlColors.accent : PlColors.bear,
+                      foregroundColor: needStop ? PlColors.onAccent : PlColors.onBear,
+                    ),
+                    onPressed: () {
+                      DeskAudio.instance.play(DeskSfx.tap);
+                      if (needStop) {
+                        desk.placeTutorialStop();
+                        HapticFeedback.mediumImpact();
+                        return;
+                      }
+                      desk.closePosition();
+                      HapticFeedback.mediumImpact();
+                    },
+                    child: Text(
+                      needStop ? s.gestureStopCta : s.closeAll,
+                      style: const TextStyle(fontWeight: FontWeight.w900),
+                    ),
                   ),
-                  onPressed: () {
-                    DeskAudio.instance.play(DeskSfx.tap);
-                    desk.closePosition();
-                    HapticFeedback.mediumImpact();
-                  },
-                  child: Text(s.closeAll, style: const TextStyle(fontWeight: FontWeight.w900)),
                 ),
               )
             : Row(
@@ -765,6 +776,56 @@ class _Actions extends StatelessWidget {
                   ),
                 ],
               ),
+      ),
+    );
+  }
+}
+
+class _GestureBanner extends StatelessWidget {
+  const _GestureBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    final desk = context.watch<DeskController>();
+    final s = S.of(context);
+    final seeded = desk.position != null;
+    final text = !seeded
+        ? s.gestureIntro
+        : !desk.tutorialStopSet
+            ? s.gestureStopHint
+            : s.gestureCloseHint;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(PlSpace.lg, 8, PlSpace.lg, 0),
+      child: Material(
+        color: PlColors.accentDim,
+        borderRadius: BorderRadius.circular(PlRadius.md),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(PlRadius.md),
+          onTap: seeded
+              ? null
+              : () {
+                  DeskAudio.instance.play(DeskSfx.tap);
+                  desk.ensureTutorialTrade();
+                },
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(PlRadius.md),
+              border: Border.all(color: PlColors.accent.withValues(alpha: 0.45)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(text, style: const TextStyle(fontWeight: FontWeight.w800, color: PlColors.accent)),
+                if (!seeded) ...[
+                  const SizedBox(height: 8),
+                  Text(s.gestureGo, style: Theme.of(context).textTheme.labelLarge?.copyWith(color: PlColors.text)),
+                ],
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

@@ -58,7 +58,7 @@ class _LeagueScreenState extends State<LeagueScreen> with SingleTickerProviderSt
     final s = S.of(context);
     final board = desk.leaderboard;
     final season = desk.season;
-    final youRank = desk.yourRank;
+    final youRank = desk.history.isEmpty ? 0 : desk.yourRank;
     final you = board.firstWhere((e) => e.isYou, orElse: () => board.last);
     final top3 = board.take(3).toList();
     final rem = season.remaining;
@@ -338,7 +338,7 @@ class _YouHero extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    '#$rank',
+                    rank == 0 ? '—' : '#$rank',
                     style: const TextStyle(
                       color: PlColors.onAccent,
                       fontWeight: FontWeight.w900,
@@ -374,7 +374,7 @@ class _YouHero extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${desk.nickname} · ${s.disc} ${desk.discipline}'
+                  '${desk.nickname} · ${s.disc} ${desk.processDisplay}'
                   '${you.streak > 0 ? ' · ${you.streak} ${s.streakLabel}' : ''}'
                   '${you.rankDelta != 0 ? ' · ${you.rankDelta > 0 ? '↑' : '↓'}${you.rankDelta.abs()}' : ''}',
                   style: Theme.of(context).textTheme.bodySmall,

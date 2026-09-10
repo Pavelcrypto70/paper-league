@@ -25,6 +25,11 @@ class TapeDrillRound {
       candles.sublist(hideFrom + 1, math.min(candles.length, hideFrom + 1 + horizon));
 
   Candle get decisionBar => candles[hideFrom];
+
+  DrillDecision get suggested {
+    final c = decisionBar;
+    return c.close >= c.open ? DrillDecision.long : DrillDecision.short;
+  }
 }
 
 class TapeDrillResult {
@@ -149,8 +154,8 @@ TapeDrillResult gradeDrill({
     tipEn = 'Stop hit. Plan held — that is the drill win.';
     tipRu = 'Стоп сработал. План держался — это победа дрилла.';
   } else if (outcome == DrillOutcome.tp) {
-    tipEn = 'Target landed. Keep the same R structure.';
-    tipRu = 'Тейк дошёл. Держи ту же структуру R.';
+    tipEn = 'Target hit. Same stop habit next time.';
+    tipRu = 'Цель дошла. Дальше тот же навык: стоп до входа.';
   } else {
     tipEn = 'Time exit. Review if entry was late to impulse.';
     tipRu = 'Выход по времени. Проверь, не поздний ли вход.';

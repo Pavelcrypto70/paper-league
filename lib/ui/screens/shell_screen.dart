@@ -118,6 +118,7 @@ class _ShellScreenState extends State<ShellScreen> {
   @override
   Widget build(BuildContext context) {
     final s = S.of(context);
+    final unlocked = context.select((DeskController d) => d.tabsUnlocked);
     return Scaffold(
       backgroundColor: PlColors.bg,
       body: SafeArea(
@@ -130,8 +131,14 @@ class _ShellScreenState extends State<ShellScreen> {
       bottomNavigationBar: _TerminalNav(
         index: _index,
         labels: [s.desk, s.book, s.league, s.you],
+        hints: [null, s.navBookHint, s.navLeagueHint, s.navYouHint],
+        unlocked: unlocked,
         onSelect: (i) {
           if (i == _index) return;
+          if (!unlocked && i != 0) {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(s.tabsLocked)));
+            return;
+          }
           DeskAudio.instance.play(DeskSfx.tap);
           HapticFeedback.selectionClick();
           setState(() => _index = i);
@@ -146,10 +153,14 @@ class _TerminalNav extends StatelessWidget {
     required this.index,
     required this.labels,
     required this.onSelect,
+    this.hints = const [],
+    this.unlocked = true,
   });
 
   final int index;
   final List<String> labels;
+  final List<String?> hints;
+  final bool unlocked;
   final ValueChanged<int> onSelect;
 
   @override
@@ -203,14 +214,16 @@ class _TerminalNav extends StatelessWidget {
                           scale: on ? 1.08 : 1,
                           duration: PlMotion.micro,
                           child: Icon(
-                            item.$1,
+                            (!unlocked && i != 0) ? Icons.lock_outline : item.$1,
                             size: 22,
                             color: on ? PlColors.accent : PlColors.faint,
                           ),
                         ),
                         const SizedBox(height: 3),
                         Text(
-                          item.$2,
+                          (!unlocked && i != 0 && hints.length > i && hints[i] != null)
+                              ? hints[i]!
+                              : item.$2,
                           style: TextStyle(
                             fontSize: 10,
                             fontWeight: on ? FontWeight.w800 : FontWeight.w500,

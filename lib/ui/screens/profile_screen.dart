@@ -556,7 +556,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         PlSurface(
           child: Column(
             children: [
-              _row(context, s.discipline, '${desk.discipline}'),
+              _row(context, s.discipline, desk.processDisplay),
               _row(context, S.of(context).avgR, desk.avgR.toStringAsFixed(2)),
               _row(context, s.maxDd, pctPoints(-desk.maxDrawdown)),
               _row(context, s.league, desk.leagueScore.toStringAsFixed(1)),
@@ -567,7 +567,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               _row(
                 context,
                 '${s.season} ${desk.season.number}',
-                '#${desk.yourRank} · ${desk.season.phaseLabel(s.isRu)}',
+                '#${desk.rankDisplay} · ${desk.season.phaseLabel(s.isRu)}',
                 last: true,
               ),
             ],

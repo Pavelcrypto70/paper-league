@@ -398,12 +398,6 @@ class S {
     pt: 'Entendo que este app é apenas uma simulação educacional e não constitui aconselhamento financeiro.',
     ru: 'Я понимаю: это образовательная симуляция, а не финансовая рекомендация.',
   );
-  String get enterDesk => t(
-    'Enter desk',
-    es: 'Entrar al desk',
-    pt: 'Entrar no desk',
-    ru: 'Войти на деск',
-  );
   String get privacyPolicy => t(
     'Privacy Policy',
     es: 'Política de privacidad',
@@ -432,12 +426,17 @@ class S {
 
   String get last => t('LAST', es: _es('LAST'), pt: _pt('LAST'), ru: 'ЦЕНА');
   String get equity =>
-      t('EQUITY', es: _es('EQUITY'), pt: _pt('EQUITY'), ru: 'ЭКВИТИ');
+      t('Account', es: _es('Account'), pt: _pt('Account'), ru: 'Счёт');
   String get session =>
-      t('SESSION', es: _es('SESSION'), pt: _pt('SESSION'), ru: 'СЕССИЯ');
-  String get maxDd =>
-      t('MAX DD', es: _es('MAX DD'), pt: _pt('MAX DD'), ru: 'МАКС. ПР');
-  String get disc => t('DISC', es: _es('DISC'), pt: _pt('DISC'), ru: 'ДИСЦ');
+      t('Today', es: _es('Today'), pt: _pt('Today'), ru: 'Сегодня');
+  String get maxDd => t(
+    'Worst dip',
+    es: _es('Worst dip'),
+    pt: _pt('Worst dip'),
+    ru: 'Просадка',
+  );
+  String get disc =>
+      t('Process', es: _es('Process'), pt: _pt('Process'), ru: 'Процесс');
   String get long => 'LONG';
   String get short => 'SHORT';
   String get close =>
@@ -454,8 +453,12 @@ class S {
   String get tpLabel => 'TP';
   String get avgR =>
       t('Avg R', es: _es('Avg R'), pt: _pt('Avg R'), ru: 'Ср. R');
-  String get streakLabel =>
-      t('streak', es: _es('streak'), pt: _pt('streak'), ru: 'серия');
+  String get streakLabel => t(
+    'days in a row',
+    es: _es('days in a row'),
+    pt: _pt('days in a row'),
+    ru: 'дни подряд',
+  );
   String get scrub =>
       t('SCRUB', es: _es('SCRUB'), pt: _pt('SCRUB'), ru: 'ЛЕНТА');
   String get chartReset =>
@@ -579,19 +582,19 @@ class S {
   String get positions =>
       t('Positions', es: _es('Positions'), pt: _pt('Positions'), ru: 'Позиции');
   String get positionsSub => t(
-    'Risk desk · partials · stop management',
-    es: _es('Risk desk · partials · stop management'),
-    pt: _pt('Risk desk · partials · stop management'),
-    ru: 'Риск-деск · частичные закрытия · стопы',
+    'After you close a trade, the review lands here.',
+    es: _es('After you close a trade, the review lands here.'),
+    pt: _pt('After you close a trade, the review lands here.'),
+    ru: 'Когда закроешь сделку, разбор появится здесь.',
   );
   String get history =>
       t('History', es: _es('History'), pt: _pt('History'), ru: 'История');
   String get flat => t('Flat', es: _es('Flat'), pt: _pt('Flat'), ru: 'Флэт');
   String get noOpen => t(
-    'No open risk. Open from Desk with a mandatory stop.',
-    es: _es('No open risk. Open from Desk with a mandatory stop.'),
-    pt: _pt('No open risk. Open from Desk with a mandatory stop.'),
-    ru: 'Нет открытого риска. Открой сделку со стопом на Деске.',
+    'Nothing open. New trades start on the Desk.',
+    es: _es('Nothing open. New trades start on the Desk.'),
+    pt: _pt('Nothing open. New trades start on the Desk.'),
+    ru: 'Нет открытой сделки. Новые — только на Деске.',
   );
   String get close50 => t(
     'Close 50%',
@@ -697,10 +700,10 @@ class S {
   String get journal =>
       t('Journal', es: _es('Journal'), pt: _pt('Journal'), ru: 'Журнал');
   String get noTrades => t(
-    'No closed trades yet.',
-    es: _es('No closed trades yet.'),
-    pt: _pt('No closed trades yet.'),
-    ru: 'Пока нет закрытых сделок.',
+    'Close a trade on the Desk — the review shows up here.',
+    es: _es('Close a trade on the Desk — the review shows up here.'),
+    pt: _pt('Close a trade on the Desk — the review shows up here.'),
+    ru: 'Закрой сделку на Деске — разбор появится здесь.',
   );
   String get resetAccount => t(
     'Reset paper account',
@@ -943,14 +946,10 @@ class S {
     ru: 'История · план · очки процесса',
   );
   String get tapeDrillHelp => t(
-    'Scrub to the marker. Long / Short / Skip with a stop. Points for plan, not guessing.',
-    es: _es(
-      'Scrub to the marker. Long / Short / Skip with a stop. Points for plan, not guessing.',
-    ),
-    pt: _pt(
-      'Scrub to the marker. Long / Short / Skip with a stop. Points for plan, not guessing.',
-    ),
-    ru: 'Крути ленту до маркера. Long / Short / Skip со стопом. Очки за план, не за угадайку.',
+    'Task first. Then tape. Then stop.',
+    es: _es('Task first. Then tape. Then stop.'),
+    pt: _pt('Task first. Then tape. Then stop.'),
+    ru: 'Сначала задание. Потом лента. Потом стоп.',
   );
   String get tapeDrillEmpty => t(
     'Not enough candles for drill',
@@ -1009,10 +1008,10 @@ class S {
   );
 
   String get dailyDesk => t(
-    'DAILY DESK',
-    es: _es('DAILY DESK'),
-    pt: _pt('DAILY DESK'),
-    ru: 'DAILY DESK',
+    'TODAY',
+    es: _es('TODAY'),
+    pt: _pt('HOJE'),
+    ru: 'СЕГОДНЯ',
   );
   String get dailyPlan =>
       t('Plan', es: _es('Plan'), pt: _pt('Plan'), ru: 'План');
@@ -1102,20 +1101,16 @@ class S {
   );
 
   String get drillIntroTitle => t(
-    'Tape Drill',
-    es: _es('Tape Drill'),
-    pt: _pt('Tape Drill'),
-    ru: 'Tape Drill',
+    'One task',
+    es: _es('One task'),
+    pt: _pt('One task'),
+    ru: 'Одно задание',
   );
   String get drillIntroBody => t(
-    'Scrub the tape. At the marker — plan with a stop. Points for process, not guessing.',
-    es: _es(
-      'Scrub the tape. At the marker — plan with a stop. Points for process, not guessing.',
-    ),
-    pt: _pt(
-      'Scrub the tape. At the marker — plan with a stop. Points for process, not guessing.',
-    ),
-    ru: 'Крути ленту. На маркере — план со стопом. Очки за процесс, не за угадайку.',
+    'Read the task first. Then show the tape and put a stop. Direction is given — you do not guess.',
+    es: _es('Read the task first. Then show the tape and put a stop. Direction is given — you do not guess.'),
+    pt: _pt('Read the task first. Then show the tape and put a stop. Direction is given — you do not guess.'),
+    ru: 'Сначала задание. Потом лента и стоп. Направление уже сказано — угадывать не нужно.',
   );
   String get drillIntroGo =>
       t('START', es: _es('START'), pt: _pt('START'), ru: 'НАЧАТЬ');
@@ -1319,16 +1314,16 @@ class S {
     ru: 'Экспорт телеметрии',
   );
   String get leagueStartApi => t(
-    'LIVE empty · start tool/league_api or open a second client',
-    es: _es('LIVE empty · start tool/league_api or open a second client'),
-    pt: _pt('LIVE empty · start tool/league_api or open a second client'),
-    ru: 'LIVE пустой · запусти tool/league_api или открой второй клиент',
+    'Live table is empty — you are early. Rankings fill as people play.',
+    es: _es('Live table is empty — you are early. Rankings fill as people play.'),
+    pt: _pt('Live table is empty — you are early. Rankings fill as people play.'),
+    ru: 'Живая таблица пустая — ты рано. Места появятся, когда люди сыграют.',
   );
   String get leagueDemoHint => t(
-    'DEMO · on-device bots. For LIVE: dart run bin/server.dart',
-    es: _es('DEMO · on-device bots. For LIVE: dart run bin/server.dart'),
-    pt: _pt('DEMO · on-device bots. For LIVE: dart run bin/server.dart'),
-    ru: 'DEMO · боты на устройстве. Для LIVE: dart run bin/server.dart',
+    'Practice table with training partners. Live ranking comes later.',
+    es: _es('Practice table with training partners. Live ranking comes later.'),
+    pt: _pt('Practice table with training partners. Live ranking comes later.'),
+    ru: 'Учебная таблица с партнёрами. Живой рейтинг позже.',
   );
   String get wsTape => 'WS';
   String get playbookSlotsFull => t(
@@ -1370,6 +1365,111 @@ class S {
     pt: _pt('Catch-up locked — need credits or token'),
     ru: 'Догон недоступен — нужны credits или токен',
   );
-  String get shields =>
-      t('Shields', es: _es('Shields'), pt: _pt('Shields'), ru: 'Щиты');
+  String get shields => t(
+    'Streak save',
+    es: _es('Streak save'),
+    pt: _pt('Streak save'),
+    ru: 'Сохранение серии',
+  );
+
+  String get gestureIntro => t(
+    'Practice money. We will protect one trade.',
+    es: _es('Practice money. We will protect one trade.'),
+    pt: _pt('Practice money. We will protect one trade.'),
+    ru: 'Учебные деньги. Сейчас защитим одну сделку.',
+  );
+  String get gestureGo =>
+      t('LET’S GO', es: _es('VAMOS'), pt: _pt('VAMOS'), ru: 'ПОЕХАЛИ');
+  String get gestureStopHint => t(
+    'Tap STOP. Protect the trade.',
+    es: _es('Tap STOP. Protect the trade.'),
+    pt: _pt('Tap STOP. Protect the trade.'),
+    ru: 'Нажми STOP. Защити сделку.',
+  );
+  String get gestureCloseHint => t(
+    'Now close the trade.',
+    es: _es('Now close the trade.'),
+    pt: _pt('Now close the trade.'),
+    ru: 'Теперь закрой сделку.',
+  );
+  String get gestureDone => t(
+    'Stop was on. That is the desk.',
+    es: _es('Stop was on. That is the desk.'),
+    pt: _pt('Stop was on. That is the desk.'),
+    ru: 'Стоп стоял. Это и есть стол.',
+  );
+  String get gestureStopCta => 'STOP';
+  String get tabsLocked => t(
+    'Finish the first trade on the Desk.',
+    es: _es('Finish the first trade on the Desk.'),
+    pt: _pt('Finish the first trade on the Desk.'),
+    ru: 'Сначала закрой учебную сделку на Деске.',
+  );
+  String get navBookHint => t(
+    'Review',
+    es: _es('Review'),
+    pt: _pt('Review'),
+    ru: 'Разбор',
+  );
+  String get navLeagueHint => t(
+    'Compare',
+    es: _es('Compare'),
+    pt: _pt('Compare'),
+    ru: 'Сравнение',
+  );
+  String get navYouHint => t(
+    'Settings',
+    es: _es('Settings'),
+    pt: _pt('Settings'),
+    ru: 'Настройки',
+  );
+
+  String get drillQuestTitle => t(
+    'Your task',
+    es: _es('Your task'),
+    pt: _pt('Your task'),
+    ru: 'Задание',
+  );
+  String drillQuestLong(String mark) => t(
+    'Price may go up from the green dot. Put STOP below it.',
+    es: _es('Price may go up from the green dot. Put STOP below it.'),
+    pt: _pt('Price may go up from the green dot. Put STOP below it.'),
+    ru: 'От зелёной точки цена может пойти вверх. Поставь STOP ниже точки.',
+  );
+  String drillQuestShort(String mark) => t(
+    'Price may go down from the green dot. Put STOP above it.',
+    es: _es('Price may go down from the green dot. Put STOP above it.'),
+    pt: _pt('Price may go down from the green dot. Put STOP above it.'),
+    ru: 'От зелёной точки цена может пойти вниз. Поставь STOP выше точки.',
+  );
+  String get drillShowTape => t(
+    'SHOW TAPE',
+    es: _es('SHOW TAPE'),
+    pt: _pt('MOSTRAR FITA'),
+    ru: 'ПОКАЗАТЬ ЛЕНТУ',
+  );
+  String get drillLookHere => t(
+    'Look here',
+    es: _es('Look here'),
+    pt: _pt('Olhe aqui'),
+    ru: 'Смотри сюда',
+  );
+  String get drillPutStop => t(
+    'PUT STOP',
+    es: _es('PONER STOP'),
+    pt: _pt('COLOCAR STOP'),
+    ru: 'ПОСТАВИТЬ STOP',
+  );
+  String drillPtsWhy(int pts) => t(
+    '+$pts training points — the stop was in place.',
+    es: _es('+$pts training points — the stop was in place.'),
+    pt: _pt('+$pts training points — the stop was in place.'),
+    ru: '+$pts очков тренировки — стоп стоял.',
+  );
+  String get drillTryAgain => t(
+    'TRY AGAIN',
+    es: _es('OTRA VEZ'),
+    pt: _pt('DE NOVO'),
+    ru: 'ЕЩЁ РАЗ',
+  );
 }

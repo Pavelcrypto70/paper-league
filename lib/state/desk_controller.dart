@@ -40,7 +40,7 @@ class DeskController extends ChangeNotifier {
   double cash = startingCash;
   double peakEquity = startingCash;
   double maxDrawdown = 0;
-  int discipline = 72;
+  int discipline = 0;
   bool loading = true;
   String? error;
   bool usedLiveFeed = false;
@@ -70,6 +70,9 @@ class DeskController extends ChangeNotifier {
   int? lastCeremonySeason;
   bool firstRunHintDone = false;
   bool firstStopTradeDone = false;
+  bool firstGestureDone = false;
+  bool tutorialTrade = false;
+  bool tutorialStopSet = false;
   DeskMeta meta = DeskMeta();
   SeasonProgress seasonProgress = SeasonProgress();
   /// One-shot juice cue for UI (fill / stop / tp / win / loss).
@@ -89,6 +92,14 @@ class DeskController extends ChangeNotifier {
   bool get preTradeRequired => history.length < 10 && discipline < 80;
 
   bool get needsFirstRunTrade => !firstStopTradeDone;
+
+  bool get tabsUnlocked => firstGestureDone;
+
+  bool get hasScoredProcess => history.isNotEmpty && !tutorialTrade;
+
+  String get processDisplay => hasScoredProcess ? '$discipline' : '—';
+
+  String get rankDisplay => firstGestureDone && history.isNotEmpty ? '$yourRank' : '—';
 
   int _tradesLast10Min = 0;
   DateTime? _lastLossAt;
@@ -368,14 +379,63 @@ class DeskController extends ChangeNotifier {
     return n;
   }
 
+  static const _freshStamp = 'paper_league_fresh_20260910';
+
+  static const _freshWipeKeys = [
+    'firstGesture',
+    'firstRunHint',
+    'firstStopTrade',
+    'tutorialTrade',
+    'tutorialStopSet',
+    'coachDone',
+    'historyJson',
+    'openPos',
+    'cash',
+    'equityCurve',
+    'discipline',
+    'peakEquity',
+    'maxDrawdown',
+    'dailyJson',
+    'achievements',
+    'deskMeta',
+    'seasonProgress',
+    'seasonRewards',
+    'tapeDrillPts',
+    'tapeDrillIntro',
+    'playbooksIntro',
+    'ceremonySeason',
+    'playbooksJson',
+    'nickname',
+    'avatarPath',
+    'avatarHue',
+    'authGateSkipped',
+    'local_league_token',
+    'local_league_uid',
+    'league_upsert_queue',
+  ];
+
+  static Future<void> wipeLocalProgressIfNeeded() async {
+    final p = await SharedPreferences.getInstance();
+    if (p.getBool(_freshStamp) ?? false) return;
+    for (final key in _freshWipeKeys) {
+      await p.remove(key);
+    }
+    await p.setBool(_freshStamp, true);
+  }
+
+  Future<void> _maybeFreshStart() async {
+    await wipeLocalProgressIfNeeded();
+  }
+
   Future<void> bootstrap() async {
     loading = true;
     notifyListeners();
     _prefs = await SharedPreferences.getInstance();
+    await _maybeFreshStart();
     nickname = _prefs?.getString('nickname') ?? 'trader';
     avatarPath = _prefs?.getString('avatarPath');
     avatarHue = _prefs?.getInt('avatarHue') ?? 188;
-    discipline = _prefs?.getInt('discipline') ?? 72;
+    discipline = _prefs?.getInt('discipline') ?? 0;
     coachDone = _prefs?.getBool('coachDone') ?? false;
     tapeDrillPoints = _prefs?.getInt('tapeDrillPts') ?? 0;
     seasonBestRank = _prefs?.getInt('seasonBestRank') ?? 99;
@@ -385,6 +445,9 @@ class DeskController extends ChangeNotifier {
     lastCeremonySeason = _prefs?.getInt('ceremonySeason');
     firstRunHintDone = _prefs?.getBool('firstRunHint') ?? false;
     firstStopTradeDone = _prefs?.getBool('firstStopTrade') ?? false;
+    tutorialTrade = _prefs?.getBool('tutorialTrade') ?? false;
+    tutorialStopSet = _prefs?.getBool('tutorialStopSet') ?? false;
+    firstGestureDone = _prefs?.getBool('firstGesture') ?? false;
     seasonRewardIds
       ..clear()
       ..addAll(_prefs?.getStringList('seasonRewards') ?? const []);
@@ -904,6 +967,9 @@ class DeskController extends ChangeNotifier {
     if (p == null) return;
     await p.setDouble('cash', cash);
     await p.setInt('discipline', discipline);
+    await p.setBool('tutorialTrade', tutorialTrade);
+    await p.setBool('tutorialStopSet', tutorialStopSet);
+    await p.setBool('firstGesture', firstGestureDone);
     await p.setDouble('peakEquity', peakEquity);
     await p.setDouble('maxDrawdown', maxDrawdown);
     await p.setString('timeframe', timeframe);
@@ -1196,6 +1262,7 @@ class DeskController extends ChangeNotifier {
       _deferStops = false;
       return;
     }
+    if (tutorialTrade && !tutorialStopSet) return;
     final pos = position;
     if (pos == null) return;
     final c = books[pos.symbol];
@@ -1227,6 +1294,7 @@ class DeskController extends ChangeNotifier {
     required double stop,
     double? tp,
     double? entryOverride,
+    bool tutorial = false,
   }) {
     if (position != null) return 'close_first';
     if (candles.isEmpty) return 'no_data';
@@ -1259,10 +1327,12 @@ class DeskController extends ChangeNotifier {
       tp: tp,
       entryAbsIndex: max(0, candles.length - 1),
     );
-    if (!coachDone) unawaited(completeCoach());
+    tutorialTrade = tutorial;
+    tutorialStopSet = tutorial ? false : true;
+    if (!tutorial && !coachDone) unawaited(completeCoach());
     unawaited(DeskAudio.instance.play(DeskSfx.fill));
     position?.trackExcursion(candles.last);
-    if (!firstStopTradeDone) {
+    if (!tutorial && !firstStopTradeDone) {
       firstStopTradeDone = true;
       unawaited(_prefs?.setBool('firstStopTrade', true));
     }
@@ -1359,9 +1429,64 @@ class DeskController extends ChangeNotifier {
     return trade;
   }
 
+  Future<void> ensureTutorialTrade() async {
+    if (firstGestureDone || position != null || candles.isEmpty) return;
+    final entry = mark;
+    if (entry <= 0) return;
+    placeMarket(
+      side: Side.long,
+      riskPct: 0.005,
+      stop: entry * 0.55,
+      tutorial: true,
+    );
+  }
+
+  void placeTutorialStop() {
+    final pos = position;
+    if (pos == null || !tutorialTrade) return;
+    final m = _markFor(pos.symbol);
+    if (m <= 0) return;
+    final next = pos.side == Side.long ? m * 0.985 : m * 1.015;
+    pos.stop = next;
+    tutorialStopSet = true;
+    firstStopTradeDone = true;
+    unawaited(_prefs?.setBool('firstStopTrade', true));
+    unawaited(_persist());
+    notifyListeners();
+  }
+
+  Future<void> completeFirstGesture() async {
+    firstGestureDone = true;
+    tutorialTrade = false;
+    tutorialStopSet = false;
+    firstRunHintDone = true;
+    await _prefs?.setBool('firstGesture', true);
+    await _prefs?.setBool('firstRunHint', true);
+    await _prefs?.setBool('tutorialTrade', false);
+    notifyListeners();
+  }
+
+  ClosedTrade? _closeTutorial(Position pos, double? exitOverride) {
+    final exit = exitOverride ?? _markFor(pos.symbol);
+    final fee = exit * pos.qty * MarketFeed.feeRate;
+    cash += pos.qty * exit - fee;
+    position = null;
+    lastRecap = null;
+    pendingShareRitual = null;
+    unawaited(completeFirstGesture());
+    unawaited(_persist());
+    pendingJuice = 'win';
+    unawaited(DeskAudio.instance.play(DeskSfx.win));
+    notifyListeners();
+    return null;
+  }
+
   ClosedTrade? closePosition({double? exitOverride, TradeExitKind? kind}) {
     final pos = position;
     if (pos == null) return null;
+    if (tutorialTrade) {
+      return _closeTutorial(pos, exitOverride);
+    }
     final exit = exitOverride ?? _markFor(pos.symbol);
     final exitKind = kind ?? TradeExitKind.manual;
     final gross = pos.side == Side.long
@@ -1538,7 +1663,10 @@ class DeskController extends ChangeNotifier {
     cash = startingCash;
     peakEquity = startingCash;
     maxDrawdown = 0;
-    discipline = 72;
+    discipline = 0;
+    firstGestureDone = false;
+    tutorialTrade = false;
+    tutorialStopSet = false;
     equityCurve
       ..clear()
       ..add(startingCash);
