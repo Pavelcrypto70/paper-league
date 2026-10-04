@@ -39,6 +39,17 @@ class BounceScenario {
     return lo + buyClose() * (hi - lo);
   }
 
+  /// Flip the bounce into a fade — sell line sits where the buy line was (as a high).
+  BounceScenario get asShort {
+    return BounceScenario(
+      id: id + 100,
+      buyIndex: buyIndex,
+      closes: [for (final c in closes) (1.0 - c).clamp(0.02, 0.98)],
+    );
+  }
+
+  double sellPrice({required double base}) => asShort.buyPrice(base: base);
+
   /// Realistic OHLC around [base], seeded so the same day looks stable.
   List<Candle> candles({required double base, int? seed}) {
     final rng = math.Random(seed ?? (0xCAAD1E ^ id ^ (base * 100).round()));

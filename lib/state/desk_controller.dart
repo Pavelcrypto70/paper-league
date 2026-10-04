@@ -100,6 +100,18 @@ class DeskController extends ChangeNotifier {
   int? pendingShellTab;
   /// League screen explainer dismissed.
   bool leagueIntroSeen = false;
+  /// Glossary of terms after 3 move copies.
+  bool glossarySeen = false;
+  /// First free-terminal coach (League week, desks 8–14).
+  bool phase4BridgeSeen = false;
+  /// Short + Tape Drill bridge (desks 15–21).
+  bool phase5BridgeSeen = false;
+  /// Season Contest/Finals bridge (desks 22–28).
+  bool phase6BridgeSeen = false;
+  /// Short teach lesson completed once.
+  bool shortTeachDone = false;
+  /// Teaching chart is a Short fade (not Long bounce).
+  bool teachIsShort = false;
   /// Phase 2: user watched move-1 replay at least once.
   bool move1ReplaySeen = false;
   /// Phase 2: successful paper copies of move 1.
@@ -212,14 +224,38 @@ class DeskController extends ChangeNotifier {
   /// Week closed — walk the user into League before dumping them on the terminal.
   bool get showPhase3Bridge => habitWeekDone && !phase3BridgeSeen;
 
+  /// Terms card after 3 copies (Book still locked until move1; this is the tour).
+  bool get showGlossaryTour => move1Copies >= 3 && !glossarySeen;
+
+  /// After P3 — one screen: how to spend desks 8–14.
+  bool get showPhase4Bridge => fullTerminalUnlocked && !phase4BridgeSeen && habitDesksDone < 14;
+
+  /// At desk 14+ — Short lesson + Tape Drill before blind Short spam.
+  bool get showPhase5Bridge => fullTerminalUnlocked && habitDesksDone >= 14 && !phase5BridgeSeen;
+
+  /// At desk 21+ — season Contest / Finals stakes.
+  bool get showPhase6Bridge => fullTerminalUnlocked && habitDesksDone >= 21 && !phase6BridgeSeen;
+
   /// Journey stage for the roadmap card:
-  /// 0 orientation+missions, 1 move 1, 2 habit week, 3 league week, 4 move pack B, 5 season.
+  /// 0 orientation+missions, 1 move 1, 2 habit week, 3 league week, 4 short+drill, 5 season.
   int get journeyStage {
     if (beginnerPathActive) return 0;
     if (!move1CopyDone) return 1;
     if (!habitWeekDone) return 2;
     if (habitDesksDone < 14) return 3;
     if (habitDesksDone < 21) return 4;
+    return 5;
+  }
+
+  /// Unified “what to tap next” for free terminal + late phases.
+  /// 0 daily incomplete, 1 check league, 2 short teach, 3 tape drill, 4 season grind, 5 done today.
+  int get nextStepKind {
+    if (!fullTerminalUnlocked) return 0;
+    if (!daily.complete) return 0;
+    if (habitDesksDone >= 14 && !shortTeachDone) return 2;
+    if (habitDesksDone >= 14 && habitDesksDone < 21 && tapeDrillPoints < 5) return 3;
+    if (habitDesksDone >= 21) return 4;
+    if (!leagueIntroSeen) return 1;
     return 5;
   }
 
@@ -515,7 +551,7 @@ class DeskController extends ChangeNotifier {
     return n;
   }
 
-  static const _freshStamp = 'paper_league_fresh_20261005_phase3d';
+  static const _freshStamp = 'paper_league_fresh_20261005_fullpath';
 
   static const _freshWipeKeys = [
     'orientStep',
@@ -523,6 +559,11 @@ class DeskController extends ChangeNotifier {
     'phase3BridgeSeen',
     'phase3Step',
     'leagueIntroSeen',
+    'glossarySeen',
+    'phase4BridgeSeen',
+    'phase5BridgeSeen',
+    'phase6BridgeSeen',
+    'shortTeachDone',
     'move1ReplaySeen',
     'move1Copies',
     'habitDesksDone',
@@ -604,12 +645,15 @@ class DeskController extends ChangeNotifier {
       final desks = switch (preset) {
         'day3' => 2,
         'week' || 'terminal' => 7,
+        'league' => 10,
+        'short' => 15,
+        'season' => 22,
         _ => 0,
       };
       // day3: 2 copies + streak 3 so Desk Club invite is actually testable.
       final copies = switch (preset) {
         'day3' => 2,
-        'week' || 'terminal' => 3,
+        'week' || 'terminal' || 'league' || 'short' || 'season' => 3,
         _ => 1,
       };
       await p.setBool('firstGesture', true);
@@ -626,10 +670,30 @@ class DeskController extends ChangeNotifier {
           jsonEncode(DeskMeta(loginStreak: 3, lastLoginDay: DailyDeskState.keyFor(DateTime.now().toUtc())).toJson()),
         );
       }
-      if (preset == 'terminal') {
+      if (preset == 'terminal' || preset == 'league' || preset == 'short' || preset == 'season') {
         await p.setBool('phase3BridgeSeen', true);
         await p.setInt('phase3Step', 4);
+        await p.setBool('glossarySeen', true);
+      }
+      if (preset == 'terminal') {
         await p.setBool('leagueIntroSeen', false);
+      }
+      if (preset == 'league') {
+        await p.setBool('phase4BridgeSeen', false);
+        await p.setBool('leagueIntroSeen', false);
+      }
+      if (preset == 'short') {
+        await p.setBool('phase4BridgeSeen', true);
+        await p.setBool('phase5BridgeSeen', false);
+        await p.setBool('shortTeachDone', false);
+        await p.setBool('leagueIntroSeen', true);
+      }
+      if (preset == 'season') {
+        await p.setBool('phase4BridgeSeen', true);
+        await p.setBool('phase5BridgeSeen', true);
+        await p.setBool('shortTeachDone', true);
+        await p.setBool('phase6BridgeSeen', false);
+        await p.setBool('leagueIntroSeen', true);
       }
     }
     await p.setString('qaPresetApplied', preset);
@@ -643,6 +707,9 @@ class DeskController extends ChangeNotifier {
       'day3' => first && desks >= 2,
       'week' => first && desks >= 7 && !(p.getBool('phase3BridgeSeen') ?? false),
       'terminal' => first && desks >= 7 && (p.getBool('phase3BridgeSeen') ?? false),
+      'league' => first && desks >= 10 && (p.getBool('phase3BridgeSeen') ?? false),
+      'short' => first && desks >= 15,
+      'season' => first && desks >= 22,
       _ => false,
     };
   }
@@ -684,6 +751,11 @@ class DeskController extends ChangeNotifier {
     phase3BridgeSeen = _prefs?.getBool('phase3BridgeSeen') ?? false;
     phase3Step = (_prefs?.getInt('phase3Step') ?? 0).clamp(0, 4);
     leagueIntroSeen = _prefs?.getBool('leagueIntroSeen') ?? false;
+    glossarySeen = _prefs?.getBool('glossarySeen') ?? false;
+    phase4BridgeSeen = _prefs?.getBool('phase4BridgeSeen') ?? false;
+    phase5BridgeSeen = _prefs?.getBool('phase5BridgeSeen') ?? false;
+    phase6BridgeSeen = _prefs?.getBool('phase6BridgeSeen') ?? false;
+    shortTeachDone = _prefs?.getBool('shortTeachDone') ?? false;
     move1ReplaySeen = _prefs?.getBool('move1ReplaySeen') ?? false;
     move1Copies = _prefs?.getInt('move1Copies') ?? 0;
     habitDesksDone = _prefs?.getInt('habitDesksDone') ?? 0;
@@ -1246,6 +1318,11 @@ class DeskController extends ChangeNotifier {
     await p.setBool('phase3BridgeSeen', phase3BridgeSeen);
     await p.setInt('phase3Step', phase3Step);
     await p.setBool('leagueIntroSeen', leagueIntroSeen);
+    await p.setBool('glossarySeen', glossarySeen);
+    await p.setBool('phase4BridgeSeen', phase4BridgeSeen);
+    await p.setBool('phase5BridgeSeen', phase5BridgeSeen);
+    await p.setBool('phase6BridgeSeen', phase6BridgeSeen);
+    await p.setBool('shortTeachDone', shortTeachDone);
     await p.setBool('move1ReplaySeen', move1ReplaySeen);
     await p.setInt('move1Copies', move1Copies);
     await p.setInt('habitDesksDone', habitDesksDone);
@@ -1854,6 +1931,41 @@ class DeskController extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> markGlossarySeen() async {
+    glossarySeen = true;
+    await _prefs?.setBool('glossarySeen', true);
+    Analytics.log('glossary_seen');
+    notifyListeners();
+  }
+
+  Future<void> completePhase4Bridge() async {
+    phase4BridgeSeen = true;
+    await _prefs?.setBool('phase4BridgeSeen', true);
+    Analytics.log('phase4_bridge_done');
+    notifyListeners();
+  }
+
+  Future<void> completePhase5Bridge({bool goToShort = true}) async {
+    phase5BridgeSeen = true;
+    await _prefs?.setBool('phase5BridgeSeen', true);
+    Analytics.log('phase5_bridge_done');
+    notifyListeners();
+  }
+
+  Future<void> completePhase6Bridge() async {
+    phase6BridgeSeen = true;
+    await _prefs?.setBool('phase6BridgeSeen', true);
+    Analytics.log('phase6_bridge_done');
+    notifyListeners();
+  }
+
+  Future<void> markShortTeachDone() async {
+    shortTeachDone = true;
+    await _prefs?.setBool('shortTeachDone', true);
+    Analytics.log('short_teach_done');
+    notifyListeners();
+  }
+
   void requestShellTab(int tab) {
     pendingShellTab = tab;
     notifyListeners();
@@ -1903,15 +2015,17 @@ class DeskController extends ChangeNotifier {
 
   /// Build / refresh a day-specific bounce chart for move replay + copy.
   /// Stable for the session — call once when opening the flow, not after close.
-  void prepareMoveTeach({int? day, int salt = 0, bool force = false}) {
+  void prepareMoveTeach({int? day, int salt = 0, bool force = false, bool short = false}) {
     if (!force && moveTeachCandles != null && moveTeachCandles!.isNotEmpty) return;
     final d = day ?? habitViewDay;
     // Day-stable salt so reopening the same day doesn't swap the picture mid-lesson.
     final s = salt != 0 ? salt : d * 31 + habitDesksDone * 7;
     final base = (candles.isNotEmpty ? candles.last.close : 56000.0).clamp(1000.0, 1e7);
-    final scenario = BounceScenario.forDay(d, salt: s);
+    final raw = BounceScenario.forDay(d, salt: s);
+    final scenario = short ? raw.asShort : raw;
+    teachIsShort = short;
     moveTeachScenarioId = scenario.id;
-    moveTeachCandles = scenario.candles(base: base, seed: s ^ (base * 10).round());
+    moveTeachCandles = scenario.candles(base: base, seed: s ^ (base * 10).round() ^ (short ? 0x51 : 0));
     moveTeachBuy = scenario.buyPrice(base: base);
     _teachTick = 0;
     notifyListeners();
@@ -1920,6 +2034,7 @@ class DeskController extends ChangeNotifier {
   void clearMoveTeach() {
     moveTeachCandles = null;
     moveTeachBuy = null;
+    teachIsShort = false;
     _teachTick = 0;
   }
 
@@ -1934,7 +2049,7 @@ class DeskController extends ChangeNotifier {
     // After entry: grind toward a small target. Before: breathe + drift into the zone.
     final double drift;
     if (moveCopyTrade && position != null) {
-      final target = position!.entry * 1.01;
+      final target = teachIsShort ? position!.entry * 0.99 : position!.entry * 1.01;
       drift = (target - px) * 0.08 + (_rng.nextDouble() - 0.45) * px * 0.00025;
     } else {
       drift = (buy - px) * 0.03 + (_rng.nextDouble() - 0.5) * px * 0.0004;
@@ -1979,11 +2094,11 @@ class DeskController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Open a guided Long for move-1 paper copy (fixed ~practice size, soft far stop).
+  /// Open a guided Long (or Short when [teachIsShort]) for paper copy.
   Future<void> ensureMove1Trade() async {
     if (position != null) return;
     if (moveTeachCandles == null || moveTeachCandles!.isEmpty) {
-      prepareMoveTeach(force: true);
+      prepareMoveTeach(force: true, short: teachIsShort);
     }
     if (candles.isEmpty && (moveTeachCandles == null || moveTeachCandles!.isEmpty)) return;
     final entry = moveTeachCandles?.last.close ?? mark;
@@ -1991,9 +2106,9 @@ class DeskController extends ChangeNotifier {
     final qty = tutorialQtyPreview;
     if (qty <= 0) return;
     final err = placeMarket(
-      side: Side.long,
+      side: teachIsShort ? Side.short : Side.long,
       riskPct: 0.01,
-      stop: entry * 0.55,
+      stop: teachIsShort ? entry * 1.45 : entry * 0.55,
       qtyOverride: qty,
       entryOverride: entry,
       tutorial: false,
@@ -2004,7 +2119,7 @@ class DeskController extends ChangeNotifier {
     tutorialTrade = false;
     tutorialStopSet = false;
     await _prefs?.setBool('moveCopyTrade', true);
-    Analytics.log('move_1_trade_open');
+    Analytics.log(teachIsShort ? 'short_teach_open' : 'move_1_trade_open');
     notifyListeners();
   }
 
@@ -2023,8 +2138,9 @@ class DeskController extends ChangeNotifier {
   }
 
   ClosedTrade? _closeMoveCopy(Position pos, double? exitOverride) {
-    // Teaching close: land near a small target above entry when no override.
-    final exit = exitOverride ?? (pos.entry * 1.012);
+    // Teaching close: small target in the trade's favor when no override.
+    final exit = exitOverride ??
+        (teachIsShort ? pos.entry * 0.988 : pos.entry * 1.012);
     final fee = exit * pos.qty * MarketFeed.feeRate;
     final gross = pos.side == Side.long
         ? (exit - pos.entry) * pos.qty
@@ -2045,7 +2161,9 @@ class DeskController extends ChangeNotifier {
       closedAt: DateTime.now(),
       flags: const {RecapFlag.stopSet, RecapFlag.sizeOk, RecapFlag.noWiden, RecapFlag.noRevenge},
       scoreDelta: 6,
-      tip: 'Move copy done. Same motion you will see live in Desk Club.',
+      tip: teachIsShort
+          ? 'Short copy done. Fade = sell the rejection, stop above.'
+          : 'Move copy done. Same motion you will see live in Desk Club.',
       stop: pos.stop,
       tp: pos.tp,
       mfe: snap.mfe,
@@ -2063,10 +2181,16 @@ class DeskController extends ChangeNotifier {
     tutorialStopSet = false;
     // Keep teaching candles until the next prepareMoveTeach(force) —
     // clearing here flashed a different (live) chart on the close frame.
-    move1Copies += 1;
+    if (teachIsShort) {
+      shortTeachDone = true;
+      unawaited(_prefs?.setBool('shortTeachDone', true));
+      unawaited(Analytics.log('short_teach_copy'));
+    } else {
+      move1Copies += 1;
+      unawaited(_prefs?.setInt('move1Copies', move1Copies));
+      unawaited(Analytics.log('move_1_copy', {'n': move1Copies}));
+    }
     unawaited(_prefs?.setBool('moveCopyTrade', false));
-    unawaited(_prefs?.setInt('move1Copies', move1Copies));
-    unawaited(Analytics.log('move_1_copy', {'n': move1Copies}));
     if (daily.plannedTrade == false) {
       unawaited(markDailyPlannedTrade());
     }
@@ -2410,6 +2534,12 @@ class DeskController extends ChangeNotifier {
     phase3Step = 0;
     pendingShellTab = null;
     leagueIntroSeen = false;
+    glossarySeen = false;
+    phase4BridgeSeen = false;
+    phase5BridgeSeen = false;
+    phase6BridgeSeen = false;
+    shortTeachDone = false;
+    teachIsShort = false;
     move1ReplaySeen = false;
     move1Copies = 0;
     habitDesksDone = 0;

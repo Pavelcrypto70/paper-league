@@ -11,7 +11,12 @@ import 'package:paper_league/ui/beginner/beginner_flow.dart';
 import 'package:paper_league/ui/beginner/beginner_home.dart';
 import 'package:paper_league/ui/beginner/orientation_flow.dart';
 import 'package:paper_league/ui/phase2/today_hub.dart';
+import 'package:paper_league/ui/phase3/glossary_tour.dart';
+import 'package:paper_league/ui/phase3/next_step_card.dart';
 import 'package:paper_league/ui/phase3/week_bridge.dart';
+import 'package:paper_league/ui/phase4/phase4_bridge.dart';
+import 'package:paper_league/ui/phase5/phase5_bridge.dart';
+import 'package:paper_league/ui/phase6/phase6_bridge.dart';
 import 'package:paper_league/ui/widgets/candle_chart.dart';
 import 'package:paper_league/ui/widgets/daily_desk_strip.dart';
 import 'package:paper_league/ui/widgets/pulse_target.dart';
@@ -131,8 +136,13 @@ class _DeskScreenState extends State<DeskScreen> {
     if (desk.showOrientation) return const OrientationFlow();
     if (desk.beginnerPathActive) return const BeginnerHome();
     if (desk.showPhase3Bridge) return const WeekBridge();
+    // Glossary once after 3 copies — before or after the habit week.
+    if (desk.showGlossaryTour) return const GlossaryTour();
     // Phase 2: bridge + Today hub until habit roots — not a raw terminal dump.
     if (!desk.fullTerminalUnlocked) return const Phase2Desk();
+    if (desk.showPhase4Bridge) return const Phase4Bridge();
+    if (desk.showPhase5Bridge) return const Phase5Bridge();
+    if (desk.showPhase6Bridge) return const Phase6Bridge();
 
     return Stack(
       children: [
@@ -148,6 +158,7 @@ class _DeskScreenState extends State<DeskScreen> {
                 ),
               ),
             const DailyDeskStrip(),
+            const NextStepCard(),
             _DrawBar(
                 tool: _tool,
                 onTool: (t) {

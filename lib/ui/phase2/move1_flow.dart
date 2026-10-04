@@ -13,16 +13,16 @@ import 'package:paper_league/ui/format.dart';
 import 'package:paper_league/ui/widgets/candle_chart.dart';
 import 'package:provider/provider.dart';
 
-Future<void> openMove1Flow(BuildContext context, {bool startAtCopy = false}) {
+Future<void> openMove1Flow(BuildContext context, {bool startAtCopy = false, bool short = false}) {
   pathTap(strong: true);
   final desk = context.read<DeskController>();
   // Force a fresh day-chart at flow open; keep it stable until the next open.
-  desk.prepareMoveTeach(day: desk.habitViewDay, force: true);
+  desk.prepareMoveTeach(day: desk.habitViewDay, force: true, short: short);
   return Navigator.of(context).push<void>(
     PageRouteBuilder<void>(
       transitionDuration: PlMotion.emphasis,
       reverseTransitionDuration: PlMotion.standard,
-      pageBuilder: (_, _, _) => Move1FlowScreen(startAtCopy: startAtCopy),
+      pageBuilder: (_, _, _) => Move1FlowScreen(startAtCopy: startAtCopy, short: short),
       transitionsBuilder: (_, anim, _, child) {
         final curved = CurvedAnimation(parent: anim, curve: PlMotion.curveIn);
         return FadeTransition(
@@ -37,10 +37,11 @@ Future<void> openMove1Flow(BuildContext context, {bool startAtCopy = false}) {
   ).whenComplete(desk.clearMoveTeach);
 }
 
-/// Replay → paper copy for move 1 (bounce up).
+/// Replay → paper copy for move 1 (bounce up) or Short fade when [short].
 class Move1FlowScreen extends StatefulWidget {
-  const Move1FlowScreen({super.key, this.startAtCopy = false});
+  const Move1FlowScreen({super.key, this.startAtCopy = false, this.short = false});
   final bool startAtCopy;
+  final bool short;
 
   @override
   State<Move1FlowScreen> createState() => _Move1FlowScreenState();
@@ -162,6 +163,7 @@ class _ReplayPageState extends State<_ReplayPage> with SingleTickerProviderState
                       final showStop = t > 0.55;
                       final showTp = t > 0.78;
                       final buy = desk.moveTeachBuy;
+                      final short = desk.teachIsShort;
                       return Container(
                         height: 260,
                         decoration: BoxDecoration(
@@ -176,11 +178,15 @@ class _ReplayPageState extends State<_ReplayPage> with SingleTickerProviderState
                                 child: CandleChart(
                                   candles: slice,
                                   guideLevel: showGuide ? buy : null,
-                                  guideTag: showGuide ? s.moveBuyLine : null,
+                                  guideTag: showGuide ? (short ? s.moveSellLine : s.moveBuyLine) : null,
                                   entry: showGuide ? buy : null,
-                                  stop: showStop && buy != null ? buy * 0.988 : null,
-                                  tp: showTp && buy != null ? buy * 1.014 : null,
-                                  side: Side.long,
+                                  stop: showStop && buy != null
+                                      ? (short ? buy * 1.012 : buy * 0.988)
+                                      : null,
+                                  tp: showTp && buy != null
+                                      ? (short ? buy * 0.986 : buy * 1.014)
+                                      : null,
+                                  side: short ? Side.short : Side.long,
                                 ),
                               ),
                       );
@@ -322,29 +328,35 @@ class _CopyPageState extends State<_CopyPage> {
                               candles: candles,
                               entry: pos?.entry,
                               stop: _stopPlaced || (desk.tutorialStopSet) ? pos?.stop : null,
-                              side: pos != null ? Side.long : null,
-                              // Keep BUY guide on the same teaching chart (also after fill).
+                              side: pos != null
+                                  ? (desk.teachIsShort ? Side.short : Side.long)
+                                  : null,
+                              // Keep guide on the same teaching chart (also after fill).
                               guideLevel: guide ?? desk.moveTeachBuy,
-                              guideTag: s.moveBuyLine,
+                              guideTag: desk.teachIsShort ? s.moveSellLine : s.moveBuyLine,
                             ),
                           ),
                   ),
                   if (!open) ...[
                     const SizedBox(height: 8),
                     Text(
-                      s.moveLookLine,
+                      desk.teachIsShort ? s.moveLookLineShort : s.moveLookLine,
                       textAlign: TextAlign.center,
-                      style: pathMono(size: 12, color: PlColors.accent),
+                      style: pathMono(size: 12, color: desk.teachIsShort ? PlColors.bear : PlColors.accent),
                     ),
                     const SizedBox(height: 12),
-                    CoachBubble(s.moveCopyCoach),
+                    CoachBubble(desk.teachIsShort ? s.moveCopyCoachShort : s.moveCopyCoach),
                     const SizedBox(height: 12),
                     PathCard(
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                       child: Column(
                         children: [
                           KvRow(s.m3RiskPer, '1.0% · −${money0(100)}', valueColor: PlColors.accent),
-                          KvRow(s.moveTargetLabel, s.moveTargetHint, valueColor: PlColors.bull),
+                          KvRow(
+                            s.moveTargetLabel,
+                            desk.teachIsShort ? s.moveTargetHintShort : s.moveTargetHint,
+                            valueColor: PlColors.bull,
+                          ),
                         ],
                       ),
                     ),
@@ -356,8 +368,8 @@ class _CopyPageState extends State<_CopyPage> {
                         children: [
                           KvRow(
                             s.m2Position,
-                            'LONG ${pos.qty.toStringAsFixed(pos.qty >= 1 ? 2 : 4)}',
-                            valueColor: PlColors.bull,
+                            '${desk.teachIsShort ? 'SHORT' : 'LONG'} ${pos.qty.toStringAsFixed(pos.qty >= 1 ? 2 : 4)}',
+                            valueColor: desk.teachIsShort ? PlColors.bear : PlColors.bull,
                           ),
                           KvRow(s.m2Entry, priceFmt(pos.entry)),
                           KvRow(s.m3Stop, priceFmt(pos.stop), valueColor: PlColors.bear),

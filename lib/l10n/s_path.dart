@@ -1157,6 +1157,115 @@ extension PathStrings on S {
         ru: 'К Daily Desk',
       );
 
+  String get moveSellLine => t('SELL', es: 'VENDER', pt: 'VENDER', ru: 'ПРОДАЙ');
+  String get moveLookLineShort => t(
+        'When price returns to this line — sell (Short)',
+        es: 'Cuando el precio vuelve a esta línea — vende (Short)',
+        pt: 'Quando o preço volta a esta linha — venda (Short)',
+        ru: 'Когда цена снова у этой линии — продавай (Short)',
+      );
+  String get moveCopyCoachShort => t(
+        'Same risk 1%. Stop ABOVE the entry. You profit if price falls.',
+        es: 'Mismo riesgo 1%. Stop ARRIBA. Ganas si baja.',
+        pt: 'Mesmo risco 1%. Stop ACIMA. Lucra se cair.',
+        ru: 'Тот же риск 1%. Стоп ВЫШЕ входа. Зарабатываешь, если цена падает.',
+      );
+  String get moveTargetHintShort => t(
+        'small drop · process > PnL',
+        es: 'pequeña bajada · proceso > PnL',
+        pt: 'queda pequena · processo > PnL',
+        ru: 'небольшое падение · процесс > PnL',
+      );
+
+  // Glossary
+  String get glCap => t('Terms', es: 'Términos', pt: 'Termos', ru: 'Термины');
+  String get glTitle => t('Five words you’ll see next', es: 'Cinco palabras que verás', pt: 'Cinco palavras que verá', ru: 'Пять слов, которые увидишь дальше');
+  String get glBody => t(
+        'After 3 copies — open the dictionary once. Then back to Daily Desk.',
+        es: 'Tras 3 copias — abre el diccionario una vez. Luego vuelve al Daily Desk.',
+        pt: 'Após 3 cópias — abra o dicionário uma vez. Depois volte ao Daily Desk.',
+        ru: 'После 3 копий — один раз открой словарь. Потом снова к Daily Desk.',
+      );
+  String get glTerm1 => 'Long';
+  String get glDef1 => t('Buy first — profit if price rises', es: 'Compras primero — ganas si sube', pt: 'Compra primeiro — lucra se subir', ru: 'Сначала покупаешь — прибыль, если цена растёт');
+  String get glTerm2 => 'Short';
+  String get glDef2 => t('Sell first — profit if price falls', es: 'Vendes primero — ganas si baja', pt: 'Vende primeiro — lucra se cair', ru: 'Сначала продаёшь — прибыль, если цена падает');
+  String get glTerm3 => 'Stop';
+  String get glDef3 => t('Exit if wrong — protects the account', es: 'Salida si te equivocas — protege la cuenta', pt: 'Saída se errar — protege a conta', ru: 'Выход если ошибся — защищает счёт');
+  String get glTerm4 => 'XP / process';
+  String get glDef4 => t('League points for stop + size + no revenge — not for luck', es: 'Puntos por stop + tamaño + sin revancha — no por suerte', pt: 'Pontos por stop + tamanho + sem revanche — não por sorte', ru: 'Очки Лиги за стоп + размер + без отыгрыша — не за удачу');
+  String get glTerm5 => 'Daily Desk';
+  String get glDef5 => t('Today’s 4 micro-missions — close them every day', es: '4 micromisiones de hoy — ciérralas cada día', pt: '4 micromissões de hoje — feche todos os dias', ru: '4 микрозадания на сегодня — закрывай каждый день');
+  String get glCta => t('Got it — back to Desk', es: 'Entendido — al Desk', pt: 'Entendi — ao Desk', ru: 'Понятно — к Desk');
+
+  // Phase 4
+  String get p4Cap => t('League week', es: 'Semana de Liga', pt: 'Semana de Liga', ru: 'Неделя Лиги');
+  String get p4Title => t('Desks 8–14: climb on process', es: 'Desks 8–14: sube por proceso', pt: 'Desks 8–14: suba por processo', ru: 'Desk 8–14: поднимайся процессом');
+  String get p4Body => t(
+        'Free terminal is open. Every day: finish Daily Desk with a stop, then peek at League rank.',
+        es: 'Terminal libre abierto. Cada día: cierra Daily Desk con stop, luego mira el rango.',
+        pt: 'Terminal livre aberto. Cada dia: feche Daily Desk com stop, depois veja o rank.',
+        ru: 'Свободный терминал открыт. Каждый день: закрой Daily Desk со стопом, потом глянь ранг в Лиге.',
+      );
+  String get p4Point1 => t('Daily strip on Desk — 4 checks', es: 'Franja Daily en Desk — 4 checks', pt: 'Faixa Daily no Desk — 4 checks', ru: 'Полоска Daily на Desk — 4 галочки');
+  String get p4Point2 => t('League tab — your card & board', es: 'Pestaña Liga — tu tarjeta y tabla', pt: 'Aba Liga — seu card e placar', ru: 'Вкладка Лига — твоя карточка и таблица');
+  String get p4Point3 => t('Skip revenge trades — XP hates them', es: 'Sin revancha — el XP las odia', pt: 'Sem revanche — XP odeia isso', ru: 'Без отыгрыша — XP это ненавидит');
+  String get p4Coach => t('Next tap: complete today’s Daily Desk above the chart.', es: 'Siguiente: cierra el Daily Desk de hoy encima del gráfico.', pt: 'Próximo: feche o Daily Desk de hoje acima do gráfico.', ru: 'Дальше: закрой сегодняшний Daily Desk над графиком.');
+  String get p4Cta => t('Open free Desk', es: 'Abrir Desk libre', pt: 'Abrir Desk livre', ru: 'Открыть свободный Desk');
+
+  // Phase 5
+  String get p5Cap => t('New skill', es: 'Nueva habilidad', pt: 'Nova habilidade', ru: 'Новый навык');
+  String get p5Title => t('Short + Tape Drill', es: 'Short + Tape Drill', pt: 'Short + Tape Drill', ru: 'Short + Tape Drill');
+  String get p5Body => t(
+        'You held a week in League. Now learn the fade (Short) once, then train eyes on Tape Drill.',
+        es: 'Aguantaste una semana en Liga. Ahora aprende el fade (Short) una vez, luego Tape Drill.',
+        pt: 'Segurou uma semana na Liga. Agora aprenda o fade (Short) uma vez, depois Tape Drill.',
+        ru: 'Ты неделю продержался в Лиге. Теперь один раз выучи Short (падение), потом тренируй глаз в Tape Drill.',
+      );
+  String get p5Point1 => t('Short = sell the rejection, stop above', es: 'Short = vende el rechazo, stop arriba', pt: 'Short = venda a rejeição, stop acima', ru: 'Short = продай отбой, стоп выше');
+  String get p5Point2 => t('Tape Drill = League tab → practice tape', es: 'Tape Drill = pestaña Liga → práctica', pt: 'Tape Drill = aba Liga → prática', ru: 'Tape Drill = вкладка Лига → практика ленты');
+  String get p5Point3 => t('Still finish Daily Desk every day', es: 'Sigue cerrando Daily Desk cada día', pt: 'Continue fechando Daily Desk todo dia', ru: 'Daily Desk по-прежнему каждый день');
+  String get p5Coach => t('Tap below for the Short lesson — same flow as Move 1, flipped.', es: 'Toca abajo para la lección Short — mismo flujo que Mov. 1, invertido.', pt: 'Toque abaixo para a lição Short — mesmo fluxo do Mov. 1, invertido.', ru: 'Жми ниже урок Short — тот же поток, что Move 1, только наоборот.');
+  String get p5CtaShort => t('Start Short lesson', es: 'Empezar lección Short', pt: 'Começar lição Short', ru: 'Начать урок Short');
+  String get p5CtaLater => t('Later — open Desk', es: 'Luego — abrir Desk', pt: 'Depois — abrir Desk', ru: 'Позже — открыть Desk');
+
+  // Phase 6
+  String get p6Cap => t('Season stretch', es: 'Tramo de temporada', pt: 'Trecho da season', ru: 'Финал сезона');
+  String get p6Title => t('Contest → Finals', es: 'Contest → Finals', pt: 'Contest → Finals', ru: 'Contest → Finals');
+  String get p6Body => t(
+        'Days 22–28. Stakes rise. Same Daily Desk — harder weight on process XP and titles.',
+        es: 'Días 22–28. Sube la presión. Mismo Daily Desk — más peso en XP y títulos.',
+        pt: 'Dias 22–28. Sobe a pressão. Mesmo Daily Desk — mais peso em XP e títulos.',
+        ru: 'Дни 22–28. Ставки выше. Тот же Daily Desk — больше вес у XP процесса и титулов.',
+      );
+  String get p6Grow => t('Build streak & track', es: 'Construye racha y track', pt: 'Construa sequência e track', ru: 'Строй стрик и трек');
+  String get p6Contest => t('XP multiplier up · board bites', es: 'Multiplicador XP · tabla muerde', pt: 'Multiplicador XP · placar aperta', ru: 'Множитель XP · таблица кусается');
+  String get p6Finals => t('Titles lock · every desk counts', es: 'Títulos se fijan · cada desk cuenta', pt: 'Títulos travam · cada desk conta', ru: 'Титулы фиксируются · каждый desk важен');
+  String get p6Coach => t('Next: open League, check season phase, then close today’s Daily.', es: 'Siguiente: abre Liga, mira la fase, cierra el Daily de hoy.', pt: 'Próximo: abra Liga, veja a fase, feche o Daily de hoje.', ru: 'Дальше: открой Лигу, глянь фазу сезона, закрой сегодняшний Daily.');
+  String get p6Cta => t('To League season', es: 'A la temporada', pt: 'Para a season', ru: 'В сезон Лиги');
+
+  // Next-step card on free terminal
+  String get nsCap => t('Next step', es: 'Siguiente paso', pt: 'Próximo passo', ru: 'Следующий шаг');
+  String get nsDailyTitle => t('Finish today’s Daily Desk', es: 'Cierra el Daily Desk de hoy', pt: 'Feche o Daily Desk de hoje', ru: 'Закрой сегодняшний Daily Desk');
+  String get nsDailyBody => t('Four checks above the chart. Planned trade + clean stop first.', es: 'Cuatro checks encima del gráfico. Trade planeado + stop limpio primero.', pt: 'Quatro checks acima do gráfico. Trade planejado + stop limpo primeiro.', ru: 'Четыре галочки над графиком. Сначала плановая сделка + чистый стоп.');
+  String get nsDailyCta => t('How: look at Daily strip', es: 'Cómo: mira la franja Daily', pt: 'Como: olhe a faixa Daily', ru: 'Как: смотри полоску Daily');
+  String get nsDailyHint => t('Daily Desk is the strip right under the header — tick the boxes with a planned trade + stop.', es: 'Daily Desk es la franja bajo el header — márcala con trade + stop.', pt: 'Daily Desk é a faixa sob o header — marque com trade + stop.', ru: 'Daily Desk — полоска сразу под шапкой. Галочки: плановая сделка + стоп.');
+  String get nsLeagueTitle => t('Open League once', es: 'Abre Liga una vez', pt: 'Abra Liga uma vez', ru: 'Открой Лигу один раз');
+  String get nsLeagueBody => t('Read your card and how XP moves — then back to Desk.', es: 'Lee tu tarjeta y cómo mueve el XP — luego vuelve.', pt: 'Leia seu card e como o XP move — depois volte.', ru: 'Прочитай свою карточку и как двигается XP — потом снова Desk.');
+  String get nsLeagueCta => t('Go to League tab', es: 'Ir a Liga', pt: 'Ir à Liga', ru: 'Во вкладку Лига');
+  String get nsShortTitle => t('Short lesson waiting', es: 'Lección Short pendiente', pt: 'Lição Short pendente', ru: 'Ждёт урок Short');
+  String get nsShortBody => t('One guided fade — sell line, stop above. Same risk 1%.', es: 'Un fade guiado — línea de venta, stop arriba. Riesgo 1%.', pt: 'Um fade guiado — linha de venda, stop acima. Risco 1%.', ru: 'Один guided fade — линия ПРОДАЙ, стоп выше. Риск 1%.');
+  String get nsShortCta => t('Start Short lesson', es: 'Empezar Short', pt: 'Começar Short', ru: 'Начать урок Short');
+  String get nsDrillTitle => t('Tape Drill in League', es: 'Tape Drill en Liga', pt: 'Tape Drill na Liga', ru: 'Tape Drill в Лиге');
+  String get nsDrillBody => t('Train reading the tape — process points, not PnL.', es: 'Entrena leer el tape — puntos de proceso, no PnL.', pt: 'Treine ler o tape — pontos de processo, não PnL.', ru: 'Тренируй чтение ленты — очки процесса, не PnL.');
+  String get nsDrillCta => t('Open Tape Drill', es: 'Abrir Tape Drill', pt: 'Abrir Tape Drill', ru: 'Открыть Tape Drill');
+  String get nsSeasonTitle => t('Season grind', es: 'Grind de temporada', pt: 'Grind da season', ru: 'Гринд сезона');
+  String get nsSeasonBody => t('Contest/Finals — every Daily Desk weights titles. Check League phase.', es: 'Contest/Finals — cada Daily pesa títulos. Mira la fase en Liga.', pt: 'Contest/Finals — cada Daily pesa títulos. Veja a fase na Liga.', ru: 'Contest/Finals — каждый Daily весит на титулы. Глянь фазу в Лиге.');
+  String get nsSeasonCta => t('Open League', es: 'Abrir Liga', pt: 'Abrir Liga', ru: 'Открыть Лигу');
+  String get nsDoneTitle => t('Day clear — optional League peek', es: 'Día limpio — mira Liga si quieres', pt: 'Dia limpo — olhe a Liga se quiser', ru: 'День закрыт — можно глянуть Лигу');
+  String get nsDoneBody => t('Come back tomorrow. Streak and board wait.', es: 'Vuelve mañana. Racha y tabla esperan.', pt: 'Volte amanhã. Sequência e placar esperam.', ru: 'Возвращайся завтра. Стрик и таблица ждут.');
+  String get nsDoneCta => t('Peek League', es: 'Mirar Liga', pt: 'Olhar Liga', ru: 'Глянуть Лигу');
+
   // Journey roadmap
   String get jmTitle => t('Your path', es: 'Tu ruta', pt: 'Sua trilha', ru: 'Твой путь');
   String jmStage(int i) => switch (i) {
