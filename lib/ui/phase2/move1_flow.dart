@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:paper_league/domain/models.dart';
 import 'package:paper_league/l10n/s.dart';
 import 'package:paper_league/l10n/s_path.dart';
 import 'package:paper_league/state/desk_controller.dart';
@@ -9,15 +11,13 @@ import 'package:paper_league/theme/tokens.dart';
 import 'package:paper_league/ui/beginner/path_kit.dart';
 import 'package:paper_league/ui/format.dart';
 import 'package:paper_league/ui/widgets/candle_chart.dart';
-import 'package:paper_league/domain/bounce_scenario.dart';
-import 'package:paper_league/domain/models.dart';
 import 'package:provider/provider.dart';
 
 Future<void> openMove1Flow(BuildContext context, {bool startAtCopy = false}) {
   pathTap(strong: true);
   final desk = context.read<DeskController>();
-  // Fresh bounce chart for this day / copy count — never the same picture twice in a row.
-  desk.prepareMoveTeach(day: desk.habitViewDay, salt: desk.move1Copies);
+  // Force a fresh day-chart at flow open; keep it stable until the next open.
+  desk.prepareMoveTeach(day: desk.habitViewDay, force: true);
   return Navigator.of(context).push<void>(
     PageRouteBuilder<void>(
       transitionDuration: PlMotion.emphasis,
@@ -34,7 +34,7 @@ Future<void> openMove1Flow(BuildContext context, {bool startAtCopy = false}) {
         );
       },
     ),
-  );
+  ).whenComplete(desk.clearMoveTeach);
 }
 
 /// Replay → paper copy for move 1 (bounce up).
@@ -61,11 +61,8 @@ class _Move1FlowScreenState extends State<Move1FlowScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final desk = context.watch<DeskController>();
-    final scenario = BounceScenario.forDay(desk.habitViewDay, salt: desk.move1Copies);
     final page = switch (_page) {
       0 => _ReplayPage(
-          scenario: scenario,
           onNext: () async {
             await context.read<DeskController>().markMove1ReplaySeen();
             _go(1);
@@ -91,8 +88,7 @@ class _Move1FlowScreenState extends State<Move1FlowScreen> {
 }
 
 class _ReplayPage extends StatefulWidget {
-  const _ReplayPage({required this.scenario, required this.onNext, required this.onClose});
-  final BounceScenario scenario;
+  const _ReplayPage({required this.onNext, required this.onClose});
   final VoidCallback onNext;
   final VoidCallback onClose;
 
@@ -103,8 +99,9 @@ class _ReplayPage extends StatefulWidget {
 class _ReplayPageState extends State<_ReplayPage> with SingleTickerProviderStateMixin {
   late final AnimationController _play = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 4200),
+    duration: const Duration(milliseconds: 5200),
   );
+  Timer? _live;
 
   @override
   void initState() {
@@ -117,10 +114,20 @@ class _ReplayPageState extends State<_ReplayPage> with SingleTickerProviderState
         _play.forward();
       }
     });
+    // After the tape finishes drawing, keep the last candle breathing.
+    _play.addStatusListener((st) {
+      if (st == AnimationStatus.completed && mounted && _live == null) {
+        _live = Timer.periodic(const Duration(milliseconds: 320), (_) {
+          if (!mounted) return;
+          context.read<DeskController>().tickMoveTeach();
+        });
+      }
+    });
   }
 
   @override
   void dispose() {
+    _live?.cancel();
     _play.dispose();
     super.dispose();
   }
@@ -128,6 +135,8 @@ class _ReplayPageState extends State<_ReplayPage> with SingleTickerProviderState
   @override
   Widget build(BuildContext context) {
     final s = S.of(context);
+    final desk = context.watch<DeskController>();
+    final all = desk.moveTeachCandles ?? const <Candle>[];
     final steps = [s.moveStep1, s.moveStep2, s.moveStep3, s.moveStep4];
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
@@ -145,17 +154,37 @@ class _ReplayPageState extends State<_ReplayPage> with SingleTickerProviderState
                 children: [
                   AnimatedBuilder(
                     animation: _play,
-                    builder: (context, _) => Container(
-                      height: 240,
-                      decoration: BoxDecoration(
-                        color: PlColors.surface,
-                        borderRadius: BorderRadius.circular(PlRadius.lg),
-                        border: Border.all(color: PlColors.lineSoft),
-                      ),
-                      child: CustomPaint(
-                        painter: _MoveReplayPainter(t: _play.value, scenario: widget.scenario),
-                      ),
-                    ),
+                    builder: (context, _) {
+                      final t = _play.value;
+                      final n = all.isEmpty ? 0 : math.max(10, (all.length * t).ceil());
+                      final slice = all.isEmpty ? all : all.take(n.clamp(1, all.length)).toList();
+                      final showGuide = t > 0.28;
+                      final showStop = t > 0.55;
+                      final showTp = t > 0.78;
+                      final buy = desk.moveTeachBuy;
+                      return Container(
+                        height: 260,
+                        decoration: BoxDecoration(
+                          color: PlColors.surface,
+                          borderRadius: BorderRadius.circular(PlRadius.lg),
+                          border: Border.all(color: PlColors.lineSoft),
+                        ),
+                        clipBehavior: Clip.antiAlias,
+                        child: slice.isEmpty
+                            ? const Center(child: CircularProgressIndicator(color: PlColors.accent))
+                            : IgnorePointer(
+                                child: CandleChart(
+                                  candles: slice,
+                                  guideLevel: showGuide ? buy : null,
+                                  guideTag: showGuide ? s.moveBuyLine : null,
+                                  entry: showGuide ? buy : null,
+                                  stop: showStop && buy != null ? buy * 0.988 : null,
+                                  tp: showTp && buy != null ? buy * 1.014 : null,
+                                  side: Side.long,
+                                ),
+                              ),
+                      );
+                    },
                   ),
                   const SizedBox(height: 14),
                   for (var i = 0; i < steps.length; i++) ...[
@@ -197,6 +226,22 @@ class _CopyPage extends StatefulWidget {
 class _CopyPageState extends State<_CopyPage> {
   bool _busy = false;
   bool _stopPlaced = false;
+  Timer? _tick;
+
+  @override
+  void initState() {
+    super.initState();
+    _tick = Timer.periodic(const Duration(milliseconds: 320), (_) {
+      if (!mounted) return;
+      context.read<DeskController>().tickMoveTeach();
+    });
+  }
+
+  @override
+  void dispose() {
+    _tick?.cancel();
+    super.dispose();
+  }
 
   Future<void> _buy() async {
     if (_busy) return;
@@ -227,7 +272,7 @@ class _CopyPageState extends State<_CopyPage> {
     final pos = desk.position;
     final open = pos != null && desk.moveCopyTrade;
     final candles = desk.moveTeachCandles ?? desk.candles;
-    final guide = open ? null : (desk.moveTeachBuy ?? desk.move1BounceLine);
+    final guide = desk.moveTeachBuy ?? desk.move1BounceLine;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
@@ -278,9 +323,9 @@ class _CopyPageState extends State<_CopyPage> {
                               entry: pos?.entry,
                               stop: _stopPlaced || (desk.tutorialStopSet) ? pos?.stop : null,
                               side: pos != null ? Side.long : null,
-                              // Bright BUY guide on THIS day's bounce chart.
-                              guideLevel: guide,
-                              guideTag: open ? null : s.moveBuyLine,
+                              // Keep BUY guide on the same teaching chart (also after fill).
+                              guideLevel: guide ?? desk.moveTeachBuy,
+                              guideTag: s.moveBuyLine,
                             ),
                           ),
                   ),
@@ -459,105 +504,3 @@ class _StepRow extends StatelessWidget {
   }
 }
 
-/// Procedural bounce replay — shape comes from [BounceScenario] so days differ.
-class _MoveReplayPainter extends CustomPainter {
-  _MoveReplayPainter({required this.t, required this.scenario});
-  final double t;
-  final BounceScenario scenario;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final w = size.width;
-    final h = size.height;
-    final pts = scenario.points;
-    final n = pts.length;
-    final slot = w / (n + 2);
-    final path = <Offset>[];
-    for (var i = 0; i < n; i++) {
-      path.add(Offset(slot * (i + 1), h * pts[i].clamp(0.1, 0.9)));
-    }
-
-    // candles
-    for (var i = 0; i < path.length; i++) {
-      final p = path[i];
-      final prev = i == 0 ? p : path[i - 1];
-      final bull = p.dy <= prev.dy;
-      final color = (bull ? PlColors.bull : PlColors.bear).withValues(alpha: 0.9);
-      final bodyH = math.max(4.0, (p.dy - prev.dy).abs() + 6);
-      final cx = p.dx;
-      canvas.drawLine(
-        Offset(cx, p.dy - bodyH * 0.7),
-        Offset(cx, p.dy + bodyH * 0.5),
-        Paint()
-          ..color = color.withValues(alpha: 0.55)
-          ..strokeWidth = 1.2,
-      );
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromCenter(center: Offset(cx, p.dy), width: slot * 0.55, height: bodyH * 0.55),
-          const Radius.circular(1.5),
-        ),
-        Paint()..color = color,
-      );
-    }
-
-    final buyI = scenario.buyIndex.clamp(0, path.length - 1);
-    final buyY = path[buyI].dy;
-    final stopY = buyY + h * 0.12;
-    final tpY = buyY - h * 0.18;
-
-    void tag(String text, Offset at, Color c) {
-      final tp = TextPainter(
-        text: TextSpan(
-          text: text,
-          style: TextStyle(
-            fontFamily: 'JetBrains Mono',
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-            color: PlColors.onAccent,
-          ),
-        ),
-        textDirection: TextDirection.ltr,
-      )..layout();
-      final r = RRect.fromRectAndRadius(
-        Rect.fromLTWH(at.dx, at.dy - 9, tp.width + 14, 18),
-        const Radius.circular(4),
-      );
-      canvas.drawRRect(r, Paint()..color = c);
-      tp.paint(canvas, Offset(at.dx + 7, at.dy - 6));
-    }
-
-    void dash(double y, Color c) {
-      final paint = Paint()
-        ..color = c
-        ..strokeWidth = 1.5;
-      for (var x = 0.0; x < w; x += 10) {
-        canvas.drawLine(Offset(x, y), Offset(math.min(x + 6, w), y), paint);
-      }
-    }
-
-    if (t > 0.15) {
-      // zone
-      canvas.drawRect(
-        Rect.fromLTRB(0, buyY - 8, w, stopY + 4),
-        Paint()..color = PlColors.accent.withValues(alpha: 0.08),
-      );
-    }
-    if (t > 0.35) {
-      dash(buyY, PlColors.accent);
-      tag('КУПИЛИ', Offset(12, buyY - 14), PlColors.accent);
-    }
-    if (t > 0.55) {
-      dash(stopY, PlColors.bear);
-      tag('СТОП', Offset(12, stopY - 14), PlColors.bear);
-    }
-    if (t > 0.75) {
-      dash(tpY, PlColors.bull);
-      tag('ЗАКРЫЛИ', Offset(12, tpY - 14), PlColors.bull);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _MoveReplayPainter oldDelegate) =>
-      oldDelegate.t != t || oldDelegate.scenario.id != scenario.id;
-}

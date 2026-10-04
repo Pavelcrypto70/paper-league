@@ -101,6 +101,8 @@ class DeskController extends ChangeNotifier {
   /// Teaching candles for move copy (distinct bounce chart per day).
   List<Candle>? moveTeachCandles;
   double? moveTeachBuy;
+  int moveTeachScenarioId = 0;
+  int _teachTick = 0;
   /// Phase 2: user is inside a Daily Desk session from Today hub (ephemeral).
   bool todaySessionActive = false;
   /// Phase 2: desks completed while in habit mode.
@@ -1753,25 +1755,88 @@ class DeskController extends ChangeNotifier {
   }
 
   /// Build / refresh a day-specific bounce chart for move replay + copy.
-  void prepareMoveTeach({int? day, int salt = 0}) {
+  /// Stable for the session — call once when opening the flow, not after close.
+  void prepareMoveTeach({int? day, int salt = 0, bool force = false}) {
+    if (!force && moveTeachCandles != null && moveTeachCandles!.isNotEmpty) return;
     final d = day ?? habitViewDay;
+    // Day-stable salt so reopening the same day doesn't swap the picture mid-lesson.
+    final s = salt != 0 ? salt : d * 31 + habitDesksDone * 7;
     final base = (candles.isNotEmpty ? candles.last.close : 56000.0).clamp(1000.0, 1e7);
-    final scenario = BounceScenario.forDay(d, salt: salt + move1Copies);
-    moveTeachCandles = scenario.candles(base: base);
+    final scenario = BounceScenario.forDay(d, salt: s);
+    moveTeachScenarioId = scenario.id;
+    moveTeachCandles = scenario.candles(base: base, seed: s ^ (base * 10).round());
     moveTeachBuy = scenario.buyPrice(base: base);
+    _teachTick = 0;
     notifyListeners();
   }
 
   void clearMoveTeach() {
     moveTeachCandles = null;
     moveTeachBuy = null;
+    _teachTick = 0;
+  }
+
+  /// Live microstructure on the teaching chart — call from a UI timer.
+  void tickMoveTeach() {
+    final list = moveTeachCandles;
+    if (list == null || list.isEmpty) return;
+    _teachTick += 1;
+    final buy = moveTeachBuy ?? list.last.close;
+    final last = list.last;
+    final px = last.close;
+    // After entry: grind toward a small target. Before: breathe + drift into the zone.
+    final double drift;
+    if (moveCopyTrade && position != null) {
+      final target = position!.entry * 1.01;
+      drift = (target - px) * 0.08 + (_rng.nextDouble() - 0.45) * px * 0.00025;
+    } else {
+      drift = (buy - px) * 0.03 + (_rng.nextDouble() - 0.5) * px * 0.0004;
+    }
+    var next = px + drift;
+    // Seal forming candle every ~8 ticks and open a new one (feels like 5m prints).
+    if (_teachTick % 8 == 0) {
+      final sealed = Candle(
+        openTime: last.openTime,
+        open: last.open,
+        high: max(last.high, next),
+        low: min(last.low, next),
+        close: next,
+        volume: last.volume + _rng.nextDouble() * 20,
+      );
+      list[list.length - 1] = sealed;
+      final open = next * (1 + (_rng.nextDouble() - 0.5) * 0.0002);
+      list.add(
+        Candle(
+          openTime: last.openTime.add(const Duration(minutes: 5)),
+          open: open,
+          high: open,
+          low: open,
+          close: open,
+          volume: 60 + _rng.nextDouble() * 40,
+        ),
+      );
+      // Keep chart length bounded.
+      if (list.length > 64) {
+        moveTeachCandles = list.sublist(list.length - 56);
+      }
+    } else {
+      list[list.length - 1] = Candle(
+        openTime: last.openTime,
+        open: last.open,
+        high: max(last.high, next),
+        low: min(last.low, next),
+        close: next,
+        volume: last.volume + _rng.nextDouble() * 4,
+      );
+    }
+    notifyListeners();
   }
 
   /// Open a guided Long for move-1 paper copy (fixed ~practice size, soft far stop).
   Future<void> ensureMove1Trade() async {
     if (position != null) return;
     if (moveTeachCandles == null || moveTeachCandles!.isEmpty) {
-      prepareMoveTeach();
+      prepareMoveTeach(force: true);
     }
     if (candles.isEmpty && (moveTeachCandles == null || moveTeachCandles!.isEmpty)) return;
     final entry = moveTeachCandles?.last.close ?? mark;
@@ -1849,7 +1914,8 @@ class DeskController extends ChangeNotifier {
     position = null;
     moveCopyTrade = false;
     tutorialStopSet = false;
-    clearMoveTeach();
+    // Keep teaching candles until the next prepareMoveTeach(force) —
+    // clearing here flashed a different (live) chart on the close frame.
     move1Copies += 1;
     unawaited(_prefs?.setBool('moveCopyTrade', false));
     unawaited(_prefs?.setInt('move1Copies', move1Copies));
