@@ -422,7 +422,7 @@ class _DonePage extends StatelessWidget {
           const SizedBox(height: 8),
           Text(s.moveCopyDoneBody, textAlign: TextAlign.center, style: pathSubStyle),
           const SizedBox(height: 20),
-          PathChip('$copies / 3', tone: PathTone.bull),
+          PathChip(s.moveTradesCount(copies), tone: PathTone.bull),
           const Spacer(),
           PathButton(
             s.moveToToday,

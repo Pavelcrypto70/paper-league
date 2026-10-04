@@ -500,10 +500,10 @@ extension PathStrings on S {
 
   // Day-3 community gate
   String d3Title(int days) => t(
-        'You copied the bounce for $days days',
-        es: 'Copiaste el rebote durante $days días',
-        pt: 'Você copiou o bounce por $days dias',
-        ru: 'Ты $days ${_ruDays(days)} копировал отскок',
+        'You traded the bounce for $days days',
+        es: 'Operaste el rebote durante $days días',
+        pt: 'Você operou o bounce por $days dias',
+        ru: 'Ты $days ${_ruDays(days)} торговал отскок',
       );
   String get d3StopStat => t(
         'trades with a stop',
@@ -616,10 +616,10 @@ extension PathStrings on S {
         ru: 'Движение 1 · Отскок вверх',
       );
   String get bridgeMoveBody => t(
-        'Watch the replay → copy on paper → set stop → close',
-        es: 'Miras el replay → copias en papel → pones stop → cierras',
-        pt: 'Assiste o replay → copia no papel → coloca stop → fecha',
-        ru: 'Смотришь реплей → повторяешь на бумаге → ставишь стоп → закрываешь',
+        'Watch the replay → make a paper trade → set stop → close',
+        es: 'Miras el replay → haces una operación en papel → pones stop → cierras',
+        pt: 'Assiste o replay → faz uma operação no papel → coloca stop → fecha',
+        ru: 'Смотришь реплей → делаешь сделку на бумаге → ставишь стоп → закрываешь',
       );
   String get bridgeCta => t(
         'Watch the move',
@@ -628,10 +628,10 @@ extension PathStrings on S {
         ru: 'Смотреть движение',
       );
   String get bridgeLockBook => t(
-        'Journal · opens after the first copy',
-        es: 'Diario · se abre tras la primera copia',
-        pt: 'Diário · abre após a primeira cópia',
-        ru: 'Журнал · откроется после первой копии',
+        'Journal · opens after the first trade',
+        es: 'Diario · se abre tras la primera operación',
+        pt: 'Diário · abre após a primeira operação',
+        ru: 'Журнал · откроется после первой сделки',
       );
   String get bridgeLockLeague => t(
         'League · after 7 days of discipline',
@@ -683,16 +683,16 @@ extension PathStrings on S {
         ru: 'Дошло до цели — закрыли. Готово',
       );
   String get moveReplayCta => t(
-        'Copy on paper',
-        es: 'Copiar en papel',
-        pt: 'Copiar no papel',
-        ru: 'Повторить на бумаге',
+        'Make a paper trade',
+        es: 'Hacer operación en papel',
+        pt: 'Fazer operação no papel',
+        ru: 'Сделать сделку на бумаге',
       );
   String get moveCopyLabel => t(
-        'Copy · move 1',
-        es: 'Copia · movimiento 1',
-        pt: 'Cópia · movimento 1',
-        ru: 'Копия · движение 1',
+        'Trade · move 1',
+        es: 'Operación · movimiento 1',
+        pt: 'Operação · movimento 1',
+        ru: 'Сделка · движение 1',
       );
   String get moveCopyCoach => t(
         'Tap Buy · Long at the bright cyan line labeled BUY. That is the bounce zone from the replay. Stop goes below it.',
@@ -734,17 +734,25 @@ extension PathStrings on S {
         ru: 'Закрыть у цели',
       );
   String get moveCopyDoneTitle => t(
-        'First copy done',
-        es: 'Primera copia hecha',
-        pt: 'Primeira cópia feita',
-        ru: 'Первая копия готова',
+        'First trade done',
+        es: 'Primera operación hecha',
+        pt: 'Primeira operação feita',
+        ru: 'Первая сделка готова',
       );
   String get moveCopyDoneBody => t(
         'You learned the bounce. Next step: Daily Desk — practice the same move again today. Day 3 unlocks the live review.',
         es: 'Aprendiste el rebote. Siguiente: Daily Desk — practica el mismo movimiento hoy. El día 3 abre el review en vivo.',
         pt: 'Você aprendeu o bounce. Próximo: Daily Desk — pratique o mesmo movimento hoje. O dia 3 abre o review ao vivo.',
-        ru: 'Ты увидел отскок. Дальше — Daily Desk: сегодня потренируй то же движение ещё раз. На 3-й день откроется live-разбор.',
+        ru: 'Ты увидел отскок. Дальше — Daily Desk: сегодня сделай ещё одну сделку по тому же движению. На 3-й день откроется live-разбор.',
       );
+  /// Counter chip under first-trade done screen, e.g. «2 / 3 сделки».
+  String moveTradesCount(int n) => t(
+        '$n / 3 trades',
+        es: '$n / 3 operaciones',
+        pt: '$n / 3 operações',
+        ru: '$n / 3 ${_ruTrades(n == 0 ? 3 : n)}',
+      );
+  String get tradesStatLabel => t('trades', es: 'operaciones', pt: 'operações', ru: 'сделок');
   String get moveToToday => t(
         'Go to Daily Desk',
         es: 'Ir al Daily Desk',
@@ -766,10 +774,10 @@ extension PathStrings on S {
   String get phaseRailDesk => t('Desk', es: 'Desk', pt: 'Desk', ru: 'Desk');
   String get phaseRailLive => t('Live', es: 'Live', pt: 'Live', ru: 'Live');
   String get phaseNextMove => t(
-        'Now: watch the bounce replay, then copy it once on paper.',
-        es: 'Ahora: mira el replay del rebote y cópialo una vez en papel.',
-        pt: 'Agora: veja o replay do bounce e copie uma vez no papel.',
-        ru: 'Сейчас: посмотри реплей отскока и один раз повтори на бумаге.',
+        'Now: watch the bounce replay, then make one paper trade.',
+        es: 'Ahora: mira el replay del rebote y haz una operación en papel.',
+        pt: 'Agora: veja o replay do bounce e faça uma operação no papel.',
+        ru: 'Сейчас: посмотри реплей отскока и сделай одну сделку на бумаге.',
       );
   String get phaseNextDesk => t(
         'Now: Daily Desk — same bounce 1–2 times with a 1% stop. That closes today.',
@@ -798,10 +806,10 @@ extension PathStrings on S {
         ru: 'Повтори движение «Отскок вверх» 1–2 раза',
       );
   String get todayTask2 => t(
-        'Each copy with a 1% stop',
-        es: 'Cada copia con stop del 1%',
-        pt: 'Cada cópia com stop de 1%',
-        ru: 'Каждая копия — со стопом 1%',
+        'Each trade with a 1% stop',
+        es: 'Cada operación con stop del 1%',
+        pt: 'Cada operação com stop de 1%',
+        ru: 'Каждая сделка — со стопом 1%',
       );
   String get todayTask3 => t(
         'Short recap at the end',
@@ -814,34 +822,34 @@ extension PathStrings on S {
     final d = ((day - 1) % 7) + 1;
     return switch (d) {
       2 => t(
-          'Same bounce again — 1–2 clean copies',
-          es: 'El mismo rebote otra vez — 1–2 copias limpias',
-          pt: 'O mesmo bounce de novo — 1–2 cópias limpas',
-          ru: 'Снова тот же отскок — 1–2 чистые копии',
+          'Same bounce again — 1–2 clean trades',
+          es: 'El mismo rebote otra vez — 1–2 operaciones limpias',
+          pt: 'O mesmo bounce de novo — 1–2 operações limpas',
+          ru: 'Снова тот же отскок — 1–2 чистые сделки',
         ),
       3 => t(
-          '1–2 copies · then peek at Desk Club',
-          es: '1–2 copias · luego mira Desk Club',
-          pt: '1–2 cópias · depois olhe o Desk Club',
-          ru: '1–2 копии · потом загляни в Desk Club',
+          '1–2 trades · then peek at Desk Club',
+          es: '1–2 operaciones · luego mira Desk Club',
+          pt: '1–2 operações · depois olhe o Desk Club',
+          ru: '1–2 сделки · потом загляни в Desk Club',
         ),
       4 => t(
-          'Copy only if the zone looks like the replay',
-          es: 'Copia solo si la zona parece el replay',
-          pt: 'Copie só se a zona parecer o replay',
-          ru: 'Копируй только если зона похожа на реплей',
+          'Trade only if the zone looks like the replay',
+          es: 'Opera solo si la zona parece el replay',
+          pt: 'Opere só se a zona parecer o replay',
+          ru: 'Входи в сделку только если зона похожа на реплей',
         ),
       5 => t(
-          'Two copies max · skip is allowed',
-          es: 'Máximo dos copias · saltar está bien',
-          pt: 'No máximo duas cópias · pular vale',
-          ru: 'Максимум две копии · пропуск можно',
+          'Two trades max · skip is allowed',
+          es: 'Máximo dos operaciones · saltar está bien',
+          pt: 'No máximo duas operações · pular vale',
+          ru: 'Максимум две сделки · пропуск можно',
         ),
       6 => t(
-          'Warm-up: one careful bounce copy',
-          es: 'Calentamiento: una copia cuidadosa del rebote',
-          pt: 'Aquecimento: uma cópia cuidadosa do bounce',
-          ru: 'Разминка: одна аккуратная копия отскока',
+          'Warm-up: one careful bounce trade',
+          es: 'Calentamiento: una operación cuidadosa del rebote',
+          pt: 'Aquecimento: uma operação cuidadosa do bounce',
+          ru: 'Разминка: одна аккуратная сделка на отскок',
         ),
       7 => t(
           'Week check: bounce + stop still automatic?',
@@ -940,10 +948,10 @@ extension PathStrings on S {
         ru: 'Desk Club',
       );
   String get todayClubLockedSub => t(
-        'After 2 copies and a 3-day streak — Telegram invite',
-        es: 'Tras 2 copias y racha de 3 — invitación a Telegram',
-        pt: 'Após 2 cópias e sequência de 3 — convite no Telegram',
-        ru: 'После 2 копий и стрика 3 дня — приглашение в Telegram',
+        'After 2 trades and a 3-day streak — Telegram invite',
+        es: 'Tras 2 operaciones y racha de 3 — invitación a Telegram',
+        pt: 'Após 2 operações e sequência de 3 — convite no Telegram',
+        ru: 'После 2 сделок и стрика 3 дня — приглашение в Telegram',
       );
   String get todayClubReadySub => t(
         'Invite ready — open Desk Club',
@@ -958,10 +966,10 @@ extension PathStrings on S {
         ru: 'Открыть клуб в Telegram',
       );
   String get todayNeedMove => t(
-        'First copy the move — then Daily Desk opens fully',
-        es: 'Primero copia el movimiento — luego se abre el Daily Desk',
-        pt: 'Primeiro copie o movimento — depois o Daily Desk abre',
-        ru: 'Сначала скопируй движение — потом откроется Daily Desk',
+        'First trade the move — then Daily Desk opens fully',
+        es: 'Primero opera el movimiento — luego se abre el Daily Desk',
+        pt: 'Primeiro opere o movimento — depois o Daily Desk abre',
+        ru: 'Сначала сделай сделку по движению — потом откроется Daily Desk',
       );
   String get todayFinish => t(
         'Finish desk',
@@ -977,10 +985,10 @@ extension PathStrings on S {
       );
   String get todaySkip => t('Skip', es: 'Saltar', pt: 'Pular', ru: 'Пропустить');
   String get bookLockedHint => t(
-        'Journal opens after your first move copy',
-        es: 'El diario se abre tras tu primera copia',
-        pt: 'O diário abre após sua primeira cópia',
-        ru: 'Журнал откроется после первой копии движения',
+        'Journal opens after your first move trade',
+        es: 'El diario se abre tras tu primera operación',
+        pt: 'O diário abre após sua primeira operação',
+        ru: 'Журнал откроется после первой сделки по движению',
       );
   String get leagueLockedHint => t(
         'League opens after 7 days of discipline',
@@ -1021,10 +1029,10 @@ extension PathStrings on S {
         ru: 'Что такое Лига',
       );
   String get p3Body1 => t(
-        'Weekly board. XP for desks with a stop and copies that look like the replay. All-in luck does not feed rank.',
-        es: 'Tabla semanal. XP por desks con stop y copias parecidas al replay. La suerte all-in no sube el rango.',
-        pt: 'Placar semanal. XP por desks com stop e cópias parecidas com o replay. Sorte all-in não sobe o rank.',
-        ru: 'Таблица недели. XP за desk со стопом и копии, похожие на реплей. All-in на удачу рейтинг не кормит.',
+        'Weekly board. XP for desks with a stop and trades that look like the replay. All-in luck does not feed rank.',
+        es: 'Tabla semanal. XP por desks con stop y operaciones parecidas al replay. La suerte all-in no sube el rango.',
+        pt: 'Placar semanal. XP por desks com stop e operações parecidas com o replay. Sorte all-in não sobe o rank.',
+        ru: 'Таблица недели. XP за desk со стопом и сделки, похожие на реплей. All-in на удачу рейтинг не кормит.',
       );
   String get p3LeaguePoint1 => t(
         'Score = discipline process',
@@ -1181,10 +1189,10 @@ extension PathStrings on S {
   String get glCap => t('Terms', es: 'Términos', pt: 'Termos', ru: 'Термины');
   String get glTitle => t('Five words you’ll see next', es: 'Cinco palabras que verás', pt: 'Cinco palavras que verá', ru: 'Пять слов, которые увидишь дальше');
   String get glBody => t(
-        'After 3 copies — open the dictionary once. Then back to Daily Desk.',
-        es: 'Tras 3 copias — abre el diccionario una vez. Luego vuelve al Daily Desk.',
-        pt: 'Após 3 cópias — abra o dicionário uma vez. Depois volte ao Daily Desk.',
-        ru: 'После 3 копий — один раз открой словарь. Потом снова к Daily Desk.',
+        'After 3 trades — open the dictionary once. Then back to Daily Desk.',
+        es: 'Tras 3 operaciones — abre el diccionario una vez. Luego vuelve al Daily Desk.',
+        pt: 'Após 3 operações — abra o dicionário uma vez. Depois volte ao Daily Desk.',
+        ru: 'После 3 сделок — один раз открой словарь. Потом снова к Daily Desk.',
       );
   String get glTerm1 => 'Long';
   String get glDef1 => t('Buy first — profit if price rises', es: 'Compras primero — ganas si sube', pt: 'Compra primeiro — lucra se subir', ru: 'Сначала покупаешь — прибыль, если цена растёт');
@@ -1278,7 +1286,7 @@ extension PathStrings on S {
       };
   String jmUnlock(int i) => switch (i) {
         0 => t('candle → Long → stop → recap', es: 'vela → Long → stop → recap', pt: 'candle → Long → stop → recap', ru: 'свеча → Long → стоп → разбор'),
-        1 => t('replay → paper copy', es: 'replay → copia en papel', pt: 'replay → cópia no papel', ru: 'реплей → копия на бумаге'),
+        1 => t('replay → paper trade', es: 'replay → operación en papel', pt: 'replay → operação no papel', ru: 'реплей → сделка на бумаге'),
         2 => t('day 3: TG club invite · day 7: League', es: 'día 3: invite TG · día 7: Liga', pt: 'dia 3: convite TG · dia 7: Liga', ru: 'день 3: инвайт в TG · день 7: Лига'),
         3 => t('desks 8–14 · rank on process XP', es: 'desks 8–14 · rango por XP', pt: 'desks 8–14 · rank por XP', ru: 'desk 8–14 · ранг за XP процесса'),
         4 => t('desks 15–21 · Tape Drill + cautious Short', es: 'desks 15–21 · Tape Drill + Short', pt: 'desks 15–21 · Tape Drill + Short', ru: 'desk 15–21 · Tape Drill + осторожный Short'),
@@ -1291,5 +1299,14 @@ extension PathStrings on S {
     if (m10 == 1 && m100 != 11) return 'день';
     if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return 'дня';
     return 'дней';
+  }
+
+  /// 1 сделка / 2 сделки / 5 сделок
+  String _ruTrades(int n) {
+    final m10 = n % 10;
+    final m100 = n % 100;
+    if (m10 == 1 && m100 != 11) return 'сделка';
+    if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return 'сделки';
+    return 'сделок';
   }
 }

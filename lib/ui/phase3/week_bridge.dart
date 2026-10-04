@@ -113,7 +113,7 @@ class _WeekStats extends StatelessWidget {
       child: Row(
         children: [
           Expanded(child: _Stat(value: '$desks', label: 'Daily Desk', color: PlColors.accent)),
-          Expanded(child: _Stat(value: '$copies', label: S.of(context).isRu ? 'копий' : 'copies', color: PlColors.bull)),
+          Expanded(child: _Stat(value: '$copies', label: S.of(context).tradesStatLabel, color: PlColors.bull)),
           const Expanded(child: _Stat(value: '100%', label: 'stop', color: PlColors.warn)),
         ],
       ),

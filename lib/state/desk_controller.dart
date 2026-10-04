@@ -2162,8 +2162,8 @@ class DeskController extends ChangeNotifier {
       flags: const {RecapFlag.stopSet, RecapFlag.sizeOk, RecapFlag.noWiden, RecapFlag.noRevenge},
       scoreDelta: 6,
       tip: teachIsShort
-          ? 'Short copy done. Fade = sell the rejection, stop above.'
-          : 'Move copy done. Same motion you will see live in Desk Club.',
+          ? 'Short trade done. Fade = sell the rejection, stop above.'
+          : 'Trade done. Same motion you will see live in Desk Club.',
       stop: pos.stop,
       tp: pos.tp,
       mfe: snap.mfe,
