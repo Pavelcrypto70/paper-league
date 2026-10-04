@@ -134,6 +134,38 @@ extension PathStrings on S {
         pt: 'Abre após 4 missões',
         ru: 'Откроется после 4 миссий',
       );
+  String homeNowHint(int step) => switch (step) {
+        1 => t(
+            'Now: learn one candle — then the first trade.',
+            es: 'Ahora: aprende una vela — luego la primera operación.',
+            pt: 'Agora: aprenda um candle — depois a primeira operação.',
+            ru: 'Сейчас: разбери одну свечу — потом первая сделка.',
+          ),
+        2 => t(
+            'Now: open one Long on paper. Next mission will add the stop.',
+            es: 'Ahora: abre un Long en papel. La siguiente misión pone el stop.',
+            pt: 'Agora: abra um Long no papel. A próxima missão coloca o stop.',
+            ru: 'Сейчас: открой один Long на бумаге. Дальше в следующей миссии — стоп.',
+          ),
+        3 => t(
+            'Now: put a 1% stop on the open trade — without it you can’t finish.',
+            es: 'Ahora: pon un stop del 1% en la operación — sin él no terminas.',
+            pt: 'Agora: coloque um stop de 1% na operação — sem ele não termina.',
+            ru: 'Сейчас: поставь стоп 1% на открытую сделку — без него миссию не закрыть.',
+          ),
+        4 => t(
+            'Now: close the trade and read the short recap.',
+            es: 'Ahora: cierra la operación y lee el recap corto.',
+            pt: 'Agora: feche a operação e leia o recap curto.',
+            ru: 'Сейчас: закрой сделку и прочитай короткий разбор.',
+          ),
+        _ => t(
+            'Path done — next we learn a real market move.',
+            es: 'Ruta hecha — ahora aprendemos un movimiento real.',
+            pt: 'Trilha feita — agora aprendemos um movimento real.',
+            ru: 'Путь закрыт — дальше учим реальное движение рынка.',
+          ),
+      };
   String get homeLoading => t(
         'Loading the market…',
         es: 'Cargando el mercado…',
@@ -702,22 +734,22 @@ extension PathStrings on S {
         ru: 'Закрыть у цели',
       );
   String get moveCopyDoneTitle => t(
-        'Copy done',
-        es: 'Copia hecha',
-        pt: 'Cópia feita',
-        ru: 'Копия готова',
+        'First copy done',
+        es: 'Primera copia hecha',
+        pt: 'Primeira cópia feita',
+        ru: 'Первая копия готова',
       );
   String get moveCopyDoneBody => t(
-        'You repeated the bounce on paper. Tomorrow — the same move. On day 3 we show it live.',
-        es: 'Repetiste el rebote en papel. Mañana — el mismo movimiento. El día 3 lo mostramos en vivo.',
-        pt: 'Você repetiu o bounce no papel. Amanhã — o mesmo movimento. No dia 3 mostramos ao vivo.',
-        ru: 'Ты повторил отскок на бумаге. Завтра — то же движение. На 3-й день покажем live.',
+        'You learned the bounce. Next step: Daily Desk — practice the same move again today. Day 3 unlocks the live review.',
+        es: 'Aprendiste el rebote. Siguiente: Daily Desk — practica el mismo movimiento hoy. El día 3 abre el review en vivo.',
+        pt: 'Você aprendeu o bounce. Próximo: Daily Desk — pratique o mesmo movimento hoje. O dia 3 abre o review ao vivo.',
+        ru: 'Ты увидел отскок. Дальше — Daily Desk: сегодня потренируй то же движение ещё раз. На 3-й день откроется live-разбор.',
       );
   String get moveToToday => t(
-        'Go to Today',
-        es: 'Ir a Hoy',
-        pt: 'Ir para Hoje',
-        ru: 'К экрану Сегодня',
+        'Go to Daily Desk',
+        es: 'Ir al Daily Desk',
+        pt: 'Ir para o Daily Desk',
+        ru: 'К Daily Desk',
       );
 
   String get todayCap => t('Today', es: 'Hoy', pt: 'Hoje', ru: 'Сегодня');
@@ -726,6 +758,36 @@ extension PathStrings on S {
         es: '$weekday · día $day',
         pt: '$weekday · dia $day',
         ru: '$weekday · день $day',
+      );
+
+  // Phase-2 “what now” — one line so the funnel never feels foggy.
+  String get phaseRailMissions => t('Missions', es: 'Misiones', pt: 'Missões', ru: 'Миссии');
+  String get phaseRailMove => t('Move 1', es: 'Mov. 1', pt: 'Mov. 1', ru: 'Движение 1');
+  String get phaseRailDesk => t('Desk', es: 'Desk', pt: 'Desk', ru: 'Desk');
+  String get phaseRailLive => t('Live', es: 'Live', pt: 'Live', ru: 'Live');
+  String get phaseNextMove => t(
+        'Now: watch the bounce replay, then copy it once on paper.',
+        es: 'Ahora: mira el replay del rebote y cópialo una vez en papel.',
+        pt: 'Agora: veja o replay do bounce e copie uma vez no papel.',
+        ru: 'Сейчас: посмотри реплей отскока и один раз повтори на бумаге.',
+      );
+  String get phaseNextDesk => t(
+        'Now: Daily Desk — same bounce 1–2 times with a 1% stop. That closes today.',
+        es: 'Ahora: Daily Desk — el mismo rebote 1–2 veces con stop 1%. Eso cierra el día.',
+        pt: 'Agora: Daily Desk — o mesmo bounce 1–2 vezes com stop 1%. Isso fecha o dia.',
+        ru: 'Сейчас: Daily Desk — тот же отскок 1–2 раза со стопом 1%. Так закрывается день.',
+      );
+  String get phaseNextAdvance => t(
+        'Today’s desk is closed. Peek at tomorrow’s tasks — or practice again.',
+        es: 'El desk de hoy está cerrado. Mira las tareas de mañana — o practica otra vez.',
+        pt: 'O desk de hoje está fechado. Veja as tarefas de amanhã — ou pratique de novo.',
+        ru: 'Desk за сегодня закрыт. Можно глянуть задания завтра — или потренироваться ещё.',
+      );
+  String get phasePracticeAgain => t(
+        'Practice again',
+        es: 'Practicar otra vez',
+        pt: 'Praticar de novo',
+        ru: 'Ещё раз потренироваться',
       );
   String get todayDeskTitle => 'Daily Desk';
   String get todayDeskMins => t('4–7 min', es: '4–7 min', pt: '4–7 min', ru: '4–7 мин');

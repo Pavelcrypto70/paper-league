@@ -36,6 +36,8 @@ class _BridgeView extends StatelessWidget {
         Text(s.bridgeTitle, style: pathTitleStyle(context)),
         const SizedBox(height: 8),
         Text(s.bridgeSub, style: pathSubStyle),
+        const SizedBox(height: 14),
+        const _PhaseRail(focus: 1),
         const SizedBox(height: 18),
         PathCard(
           accent: true,
@@ -77,6 +79,21 @@ class _BridgeView extends StatelessWidget {
 class _TodayHub extends StatelessWidget {
   const _TodayHub();
 
+  Future<void> _runDesk(BuildContext context, DeskController desk) async {
+    pathTap(strong: true);
+    if (!desk.move1CopyDone) {
+      await openMove1Flow(context, startAtCopy: desk.move1ReplaySeen);
+      return;
+    }
+    final before = desk.move1Copies;
+    await openMove1Flow(context, startAtCopy: true);
+    if (!context.mounted) return;
+    final after = context.read<DeskController>().move1Copies;
+    if (after > before) {
+      context.read<DeskController>().endTodaySession(countDesk: true);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final s = S.of(context);
@@ -87,11 +104,19 @@ class _TodayHub extends StatelessWidget {
     final streak = desk.meta.loginStreak;
     final dayDone = desk.habitViewDayDone;
     final canNext = desk.canAdvanceHabitDay;
+    final focus = desk.phase2Focus;
 
-    // Task completion for the viewed day (honest checks, not always-on).
-    final t1Done = desk.move1Copies >= dayNum || desk.habitDesksDone >= dayNum;
-    final t2Done = t1Done; // stop is forced in the copy flow
-    final t3Done = desk.habitDesksDone >= dayNum || (dayNum == 1 && desk.move1CopyDone);
+    final nextLine = switch (focus) {
+      0 => s.phaseNextMove,
+      1 => s.phaseNextDesk,
+      2 => s.phaseNextAdvance,
+      _ => s.phaseNextAdvance,
+    };
+
+    // Honest checks for the viewed day.
+    final t1Done = desk.habitDesksDone >= dayNum || (focus == 0 && desk.move1Copies >= 1);
+    final t2Done = desk.habitDesksDone >= dayNum;
+    final t3Done = desk.habitDesksDone >= dayNum;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
@@ -116,6 +141,10 @@ class _TodayHub extends StatelessWidget {
             ),
           ],
         ),
+        const SizedBox(height: 12),
+        _PhaseRail(focus: focus == 0 ? 1 : 2),
+        const SizedBox(height: 12),
+        CoachBubble(nextLine),
         const SizedBox(height: 14),
         _WeekRow(focus: wd, desksDone: desk.habitDesksDone, viewDay: dayNum),
         const SizedBox(height: 16),
@@ -137,11 +166,18 @@ class _TodayHub extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 12),
-              _Li(s.todayTask1For(dayNum), done: t1Done),
+              _Li(s.todayTask1For(dayNum), done: t1Done || dayDone),
               _Li(s.todayTask2For(dayNum), done: t2Done),
               _Li(s.todayTask3For(dayNum), done: t3Done),
               const SizedBox(height: 14),
-              if (canNext) ...[
+              if (focus == 0)
+                PathButton(
+                  s.bridgeCta,
+                  trailingIcon: Icons.arrow_forward_rounded,
+                  pulse: true,
+                  onPressed: () => _runDesk(context, desk),
+                )
+              else if (canNext) ...[
                 PathButton(
                   s.todayNextDay,
                   trailingIcon: Icons.arrow_forward_rounded,
@@ -152,26 +188,17 @@ class _TodayHub extends StatelessWidget {
                   },
                 ),
                 const SizedBox(height: 8),
-                Text(s.todayNextHint, textAlign: TextAlign.center, style: pathFineStyle),
+                PathButton(
+                  s.phasePracticeAgain,
+                  tone: PathButtonTone.ghost,
+                  onPressed: () => _runDesk(context, desk),
+                ),
               ] else
                 PathButton(
-                  desk.move1CopyDone ? s.todayStart : s.bridgeCta,
+                  s.todayStart,
                   trailingIcon: Icons.arrow_forward_rounded,
-                  pulse: !desk.move1CopyDone,
-                  onPressed: () async {
-                    pathTap(strong: true);
-                    if (!desk.move1CopyDone) {
-                      await openMove1Flow(context, startAtCopy: desk.move1ReplaySeen);
-                      return;
-                    }
-                    final before = desk.move1Copies;
-                    await openMove1Flow(context, startAtCopy: true);
-                    if (!context.mounted) return;
-                    final after = context.read<DeskController>().move1Copies;
-                    if (after > before) {
-                      context.read<DeskController>().endTodaySession(countDesk: true);
-                    }
-                  },
+                  pulse: true,
+                  onPressed: () => _runDesk(context, desk),
                 ),
             ],
           ),
@@ -227,10 +254,95 @@ class _TodayHub extends StatelessWidget {
             ],
           ),
         ),
-        if (!desk.move1CopyDone) ...[
-          const SizedBox(height: 14),
-          Text(s.todayNeedMove, textAlign: TextAlign.center, style: pathFineStyle),
+      ],
+    );
+  }
+}
+
+/// Mini funnel: Missions → Move 1 → Desk → Live.
+class _PhaseRail extends StatelessWidget {
+  const _PhaseRail({required this.focus});
+
+  /// 0 missions (unused here), 1 move, 2 desk, 3 live.
+  final int focus;
+
+  @override
+  Widget build(BuildContext context) {
+    final s = S.of(context);
+    final labels = [s.phaseRailMissions, s.phaseRailMove, s.phaseRailDesk, s.phaseRailLive];
+    return PathCard(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      child: Row(
+        children: [
+          for (var i = 0; i < 4; i++) ...[
+            if (i > 0)
+              Expanded(
+                child: Container(
+                  height: 2,
+                  margin: const EdgeInsets.only(bottom: 18),
+                  color: i <= focus ? PlColors.bull : PlColors.lineSoft,
+                ),
+              ),
+            _RailDot(
+              label: labels[i],
+              done: i < focus,
+              current: i == focus,
+              locked: i == 3 && focus < 3,
+            ),
+          ],
         ],
+      ),
+    );
+  }
+}
+
+class _RailDot extends StatelessWidget {
+  const _RailDot({
+    required this.label,
+    required this.done,
+    required this.current,
+    required this.locked,
+  });
+
+  final String label;
+  final bool done;
+  final bool current;
+  final bool locked;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = done
+        ? PlColors.bull
+        : current
+            ? PlColors.accent
+            : PlColors.faint;
+    return Column(
+      children: [
+        Container(
+          width: 28,
+          height: 28,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: done
+                ? PlColors.bull
+                : current
+                    ? PlColors.accentDim
+                    : PlColors.surface2,
+            border: Border.all(color: color, width: current ? 2 : 1.5),
+          ),
+          child: Icon(
+            locked
+                ? Icons.lock_outline_rounded
+                : done
+                    ? Icons.check_rounded
+                    : Icons.circle,
+            size: done || locked ? 14 : 8,
+            color: done ? PlColors.onBull : color,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(label, style: pathMono(size: 10, color: color)),
       ],
     );
   }
@@ -246,7 +358,6 @@ class _WeekRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = S.of(context);
     final names = s.isRu ? _wdRu : _wdEn;
-    // Habit week: Пн = day 1 of the current 7-day block.
     final blockStart = ((viewDay - 1) ~/ 7) * 7;
     return Row(
       children: [

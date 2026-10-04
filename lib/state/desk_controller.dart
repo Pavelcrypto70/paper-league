@@ -156,12 +156,21 @@ class DeskController extends ChangeNotifier {
   /// Path day number shown in the Today header (1–28).
   int get habitPathDay => habitViewDay.clamp(1, 28);
 
-  /// Day N is complete once that many Daily Desks are closed.
-  /// Day 1 also counts after the first successful move copy (bridge/copy flow).
-  bool get habitViewDayDone =>
-      habitDesksDone >= habitViewDay || (habitViewDay == 1 && move1CopyDone);
+  /// Day N is complete only after that Daily Desk is closed.
+  /// First move-copy from the bridge does NOT close day 1 — that is the lesson;
+  /// Daily Desk is the practice that counts the day.
+  bool get habitViewDayDone => habitDesksDone >= habitViewDay;
 
   bool get canAdvanceHabitDay => habitViewDayDone && habitViewDay < 28;
+
+  /// Linear phase-2 step for “what now” coaching.
+  /// 0 = need move replay/copy, 1 = need today’s desk, 2 = day done → next, 3 = rooted.
+  int get phase2Focus {
+    if (!move1CopyDone) return 0;
+    if (!habitViewDayDone) return 1;
+    if (canAdvanceHabitDay) return 2;
+    return 3;
+  }
 
   /// Book opens after the first successful move copy.
   bool get bookTabUnlocked => firstGestureDone && move1CopyDone;
@@ -464,7 +473,7 @@ class DeskController extends ChangeNotifier {
     return n;
   }
 
-  static const _freshStamp = 'paper_league_fresh_20261005_orient';
+  static const _freshStamp = 'paper_league_fresh_20261005_flow_v2';
 
   static const _freshWipeKeys = [
     'orientStep',
@@ -560,8 +569,13 @@ class DeskController extends ChangeNotifier {
     move1ReplaySeen = _prefs?.getBool('move1ReplaySeen') ?? false;
     move1Copies = _prefs?.getInt('move1Copies') ?? 0;
     habitDesksDone = _prefs?.getInt('habitDesksDone') ?? 0;
-    // Default: stay on the last completed day so “next day” CTA is visible after a desk.
-    habitViewDay = (_prefs?.getInt('habitViewDay') ?? max(1, habitDesksDone)).clamp(1, 28);
+    final storedView = _prefs?.getInt('habitViewDay');
+    if (storedView != null) {
+      habitViewDay = storedView.clamp(1, 28);
+    } else {
+      // First incomplete day. After a desk closes we persist view on that day for the CTA.
+      habitViewDay = (habitDesksDone + 1).clamp(1, 28);
+    }
     moveCopyTrade = _prefs?.getBool('moveCopyTrade') ?? false;
     final storedStep = _prefs?.getInt('beginnerPathStep');
     if (storedStep != null) {
@@ -1717,11 +1731,6 @@ class DeskController extends ChangeNotifier {
 
   Future<void> advanceHabitViewDay() async {
     if (!canAdvanceHabitDay) return;
-    // First copy without a counted desk still closes day 1 when they advance.
-    if (habitViewDay == 1 && habitDesksDone < 1 && move1CopyDone) {
-      habitDesksDone = 1;
-      await _prefs?.setInt('habitDesksDone', habitDesksDone);
-    }
     habitViewDay = (habitViewDay + 1).clamp(1, 28);
     await _prefs?.setInt('habitViewDay', habitViewDay);
     Analytics.log('habit_day_advance', {'day': habitViewDay});

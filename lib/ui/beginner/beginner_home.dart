@@ -40,6 +40,8 @@ class BeginnerHome extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         _Rail(current: step, done: done),
+        const SizedBox(height: 12),
+        CoachBubble(s.homeNowHint(step)),
         const SizedBox(height: 16),
         PathCard(
           accent: true,
