@@ -7,6 +7,7 @@ import 'package:paper_league/services/desk_audio.dart';
 import 'package:paper_league/state/desk_controller.dart';
 import 'package:paper_league/theme/tokens.dart';
 import 'package:paper_league/ui/format.dart';
+import 'package:paper_league/ui/widgets/beginner_path.dart';
 import 'package:paper_league/ui/widgets/candle_chart.dart';
 import 'package:paper_league/ui/widgets/daily_desk_strip.dart';
 import 'package:paper_league/ui/widgets/pulse_target.dart';
@@ -25,11 +26,19 @@ class _DeskScreenState extends State<DeskScreen> {
   ChartTool _tool = ChartTool.pointer;
   int _clearToken = 0;
   Color? _juiceFlash;
+  bool _pathBooted = false;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     final desk = context.watch<DeskController>();
+    if (!_pathBooted && !desk.loading) {
+      _pathBooted = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        context.read<DeskController>().ensureBeginnerPathStarted();
+      });
+    }
     final juice = desk.pendingJuice;
     if (juice != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -65,6 +74,15 @@ class _DeskScreenState extends State<DeskScreen> {
   Future<void> _openTicket(Side side) async {
     final desk = context.read<DeskController>();
     DeskAudio.instance.play(DeskSfx.tap);
+    // Beginner mission 2: Buy Long seeds the protected tutorial trade.
+    if (desk.beginnerPathActive && desk.beginnerPathStep == 2 && side == Side.long) {
+      await desk.ensureTutorialTrade();
+      return;
+    }
+    if (desk.beginnerPathActive && desk.beginnerPathStep < 2) {
+      await showCandleMissionSheet(context);
+      return;
+    }
     if (desk.needsLeagueNickname) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(S.of(context).nickRequired)));
@@ -110,7 +128,7 @@ class _DeskScreenState extends State<DeskScreen> {
     if (loading) return const _Skeleton();
 
     final desk = context.watch<DeskController>();
-    final gesture = !desk.firstGestureDone;
+    final pathActive = desk.beginnerPathActive;
 
     return Stack(
       children: [
@@ -125,8 +143,8 @@ class _DeskScreenState extends State<DeskScreen> {
                   style: const TextStyle(color: PlColors.warn, fontWeight: FontWeight.w700, fontSize: 12),
                 ),
               ),
-            if (!gesture) const DailyDeskStrip(),
-            if (!gesture)
+            if (!pathActive) const DailyDeskStrip(),
+            if (!pathActive)
               _DrawBar(
                 tool: _tool,
                 onTool: (t) {
@@ -140,9 +158,9 @@ class _DeskScreenState extends State<DeskScreen> {
                 },
               ),
             Expanded(child: _Chart(tool: _tool, clearToken: _clearToken)),
-            if (!gesture) const _CoachBanner(),
+            if (!pathActive) const _CoachBanner(),
             const _PositionDock(),
-            if (gesture) const _GestureBanner(),
+            if (pathActive) const BeginnerMissionRail(),
             _Actions(onTicket: _openTicket),
           ],
         ),
@@ -648,7 +666,7 @@ class _PositionDock extends StatelessWidget {
                     ),
                     Text(
                       desk.tutorialTrade && !desk.tutorialStopSet
-                          ? S.of(context).gestureStopHint
+                          ? '${S.of(context).gestureStopHint} · ${S.of(context).mission3RiskHint}'
                           : 'SL ${priceFmt(pos.stop)}${pos.tp != null ? ' · TP ${priceFmt(pos.tp!)}' : ''}',
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
@@ -713,6 +731,7 @@ class _Actions extends StatelessWidget {
     final open = desk.position != null;
     final needStop = desk.tutorialTrade && !desk.tutorialStopSet;
     final needClose = desk.tutorialTrade && desk.tutorialStopSet && open;
+    final pathTrade = desk.beginnerPathActive && desk.beginnerPathStep == 2 && !open;
 
     return SafeArea(
       top: false,
@@ -745,9 +764,9 @@ class _Actions extends StatelessWidget {
                   ),
                 ),
               )
-            : Row(
-                children: [
-                  Expanded(
+            : pathTrade
+                ? PulseTarget(
+                    active: true,
                     child: SizedBox(
                       height: 52,
                       child: FilledButton(
@@ -756,76 +775,43 @@ class _Actions extends StatelessWidget {
                           foregroundColor: PlColors.onBull,
                         ),
                         onPressed: () => onTicket(Side.long),
-                        child: Text(s.long, style: const TextStyle(fontWeight: FontWeight.w900)),
+                        child: Text(s.missionBuyLong, style: const TextStyle(fontWeight: FontWeight.w900)),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: SizedBox(
-                      height: 52,
-                      child: FilledButton(
-                        style: FilledButton.styleFrom(
-                          backgroundColor: PlColors.bear,
-                          foregroundColor: PlColors.onBear,
+                  )
+                : Row(
+                    children: [
+                      Expanded(
+                        child: SizedBox(
+                          height: 52,
+                          child: FilledButton(
+                            style: FilledButton.styleFrom(
+                              backgroundColor: PlColors.bull,
+                              foregroundColor: PlColors.onBull,
+                            ),
+                            onPressed: () => onTicket(Side.long),
+                            child: Text(s.long, style: const TextStyle(fontWeight: FontWeight.w900)),
+                          ),
                         ),
-                        onPressed: () => onTicket(Side.short),
-                        child: Text(s.short, style: const TextStyle(fontWeight: FontWeight.w900)),
                       ),
-                    ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: SizedBox(
+                          height: 52,
+                          child: FilledButton(
+                            style: FilledButton.styleFrom(
+                              backgroundColor: PlColors.bear,
+                              foregroundColor: PlColors.onBear,
+                            ),
+                            onPressed: desk.beginnerPathActive && desk.beginnerPathStep < 2
+                                ? null
+                                : () => onTicket(Side.short),
+                            child: Text(s.short, style: const TextStyle(fontWeight: FontWeight.w900)),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-      ),
-    );
-  }
-}
-
-class _GestureBanner extends StatelessWidget {
-  const _GestureBanner();
-
-  @override
-  Widget build(BuildContext context) {
-    final desk = context.watch<DeskController>();
-    final s = S.of(context);
-    final seeded = desk.position != null;
-    final text = !seeded
-        ? s.gestureIntro
-        : !desk.tutorialStopSet
-            ? s.gestureStopHint
-            : s.gestureCloseHint;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(PlSpace.lg, 8, PlSpace.lg, 0),
-      child: Material(
-        color: PlColors.accentDim,
-        borderRadius: BorderRadius.circular(PlRadius.md),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(PlRadius.md),
-          onTap: seeded
-              ? null
-              : () {
-                  DeskAudio.instance.play(DeskSfx.tap);
-                  desk.ensureTutorialTrade();
-                },
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(PlRadius.md),
-              border: Border.all(color: PlColors.accent.withValues(alpha: 0.45)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(text, style: const TextStyle(fontWeight: FontWeight.w800, color: PlColors.accent)),
-                if (!seeded) ...[
-                  const SizedBox(height: 8),
-                  Text(s.gestureGo, style: Theme.of(context).textTheme.labelLarge?.copyWith(color: PlColors.text)),
-                ],
-              ],
-            ),
-          ),
-        ),
       ),
     );
   }

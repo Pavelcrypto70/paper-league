@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:paper_league/l10n/s.dart';
+import 'package:paper_league/services/analytics.dart';
 import 'package:paper_league/theme/tokens.dart';
 import 'package:provider/provider.dart';
 
@@ -75,6 +76,8 @@ class _LegalGateScreenState extends State<LegalGateScreen> {
                   onPressed: checked
                       ? () async {
                           HapticFeedback.mediumImpact();
+                          await Analytics.log('legal_accept');
+                          if (!context.mounted) return;
                           await context.read<LocaleController>().acceptDisclaimer();
                         }
                       : null,

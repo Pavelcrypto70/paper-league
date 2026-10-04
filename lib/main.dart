@@ -8,7 +8,6 @@ import 'package:paper_league/state/auth_controller.dart';
 import 'package:paper_league/state/desk_controller.dart';
 import 'package:paper_league/theme/theme.dart';
 import 'package:paper_league/theme/tokens.dart';
-import 'package:paper_league/ui/screens/auth_gate_screen.dart';
 import 'package:paper_league/ui/screens/language_gate_screen.dart';
 import 'package:paper_league/ui/screens/legal_gate_screen.dart';
 import 'package:paper_league/ui/screens/shell_screen.dart';
@@ -76,21 +75,29 @@ class _Root extends StatefulWidget {
 class _RootState extends State<_Root> {
   bool _splashDone = false;
   bool _onlineBound = false;
+  bool _autoGuestStarted = false;
 
   Future<void> _bindIfNeeded() async {
     if (_onlineBound) return;
     final auth = context.read<AuthController>();
     final desk = context.read<DeskController>();
-    if (auth.phase != AuthPhase.ready && auth.phase != AuthPhase.needsGate) {
-      return;
-    }
-    if (auth.phase == AuthPhase.ready) {
-      _onlineBound = true;
-      await desk.bindOnline(
-        auth.league,
-        live: auth.onlineConfigured && auth.isSignedIn,
-      );
-    }
+    if (auth.phase != AuthPhase.ready) return;
+    _onlineBound = true;
+    await desk.bindOnline(
+      auth.league,
+      live: auth.onlineConfigured && auth.isSignedIn,
+    );
+  }
+
+  Future<void> _autoGuestIfNeeded() async {
+    if (_autoGuestStarted) return;
+    final auth = context.read<AuthController>();
+    if (auth.phase != AuthPhase.needsGate) return;
+    _autoGuestStarted = true;
+    await auth.continueAsGuest();
+    if (!mounted) return;
+    await _bindIfNeeded();
+    if (mounted) setState(() {});
   }
 
   @override
@@ -107,22 +114,27 @@ class _RootState extends State<_Root> {
       );
     }
 
+    // 1) Language
     if (!locale.languageChosen) {
       return LanguageGateScreen(
         onPick: context.read<LocaleController>().chooseLanguage,
       );
     }
 
-    if (!locale.disclaimerAccepted) {
-      return const LegalGateScreen();
-    }
-
+    // 2) Promise (splash) before legal
     if (!_splashDone) {
       return SplashScreen(
         onDone: () async {
+          await Analytics.log('promise_seen');
+          if (!mounted) return;
           setState(() => _splashDone = true);
         },
       );
+    }
+
+    // 3) Legal
+    if (!locale.disclaimerAccepted) {
+      return const LegalGateScreen();
     }
 
     if (auth.phase == AuthPhase.booting) {
@@ -132,21 +144,16 @@ class _RootState extends State<_Root> {
       );
     }
 
+    // 4) Auto-guest — never block cold start on AuthGate
     if (auth.phase == AuthPhase.needsGate) {
-      return AuthGateScreen(
-        onReady: () async {
-          await context.read<DeskController>().bindOnline(
-            context.read<AuthController>().league,
-            live:
-                context.read<AuthController>().onlineConfigured &&
-                context.read<AuthController>().isSignedIn,
-          );
-          setState(() => _onlineBound = true);
-        },
+      WidgetsBinding.instance.addPostFrameCallback((_) => _autoGuestIfNeeded());
+      return const Scaffold(
+        backgroundColor: PlColors.bg,
+        body: Center(child: CircularProgressIndicator(color: PlColors.accent)),
       );
     }
 
-    // Ready
+    // 5) Shell
     if (!_onlineBound) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _bindIfNeeded());
     }

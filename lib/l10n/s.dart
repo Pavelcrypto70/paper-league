@@ -359,26 +359,22 @@ class S {
     ru: 'ВОЙТИ В ДЕСК',
   );
   String get splashTitle => t(
-    'Discipline\ngets scored.',
-    es: _es('Discipline\ngets scored.'),
-    pt: _pt('Discipline\ngets scored.'),
-    ru: 'Дисциплина\nсчитается.',
+    'Learn to trade\non paper.',
+    es: 'Aprende a operar\nen papel.',
+    pt: 'Aprenda a operar\nem papel.',
+    ru: 'Учись торговать\nна бумаге.',
   );
   String get splashSub => t(
-    'Paper desk. Mandatory stops. League for risk control — not lottery PnL.',
-    es: _es(
-      'Paper desk. Mandatory stops. League for risk control — not lottery PnL.',
-    ),
-    pt: _pt(
-      'Paper desk. Mandatory stops. League for risk control — not lottery PnL.',
-    ),
-    ru: 'Бумажный деск с обязательными стопами. Лига за контроль риска — не за удачу.',
+    'First trade. Stop. Journal. No risk of real money — practice the desk process.',
+    es: 'Primera operación. Stop. Diario. Sin riesgo de dinero real — practica el proceso del desk.',
+    pt: 'Primeira operação. Stop. Diário. Sem risco de dinheiro real — pratique o processo do desk.',
+    ru: 'Первая сделка. Стоп. Журнал. Без риска реальных денег — отработай процесс деска.',
   );
   String get eduOnly => t(
-    'Simulation · no real money',
-    es: _es('Simulation · no real money'),
-    pt: _pt('Simulation · no real money'),
-    ru: 'Симуляция · без реальных денег',
+    'Educational simulation · no real money',
+    es: 'Simulación educativa · sin dinero real',
+    pt: 'Simulação educacional · sem dinheiro real',
+    ru: 'Образовательная симуляция · без реальных денег',
   );
   String get legalTitle => t(
     'Before you continue',
@@ -387,10 +383,10 @@ class S {
     ru: 'Перед продолжением',
   );
   String get legalBody => t(
-    'Paper League is a paper-trading simulator for practice and discipline. It is not a broker, not a signal service, and not financial advice. No real money is used. Markets can cause loss. You are responsible for your decisions.',
-    es: 'Paper League es un simulador de trading para practicar disciplina. No es un bróker, ni un servicio de señales, ni asesoramiento financiero. No se usa dinero real. Los mercados pueden generar pérdidas. Tú eres responsable de tus decisiones.',
-    pt: 'Paper League é um simulador de trading para praticar disciplina. Não é uma corretora, nem um serviço de sinais, nem aconselhamento financeiro. Não se usa dinheiro real. Mercados podem gerar perdas. Você é responsável pelas suas decisões.',
-    ru: 'Paper League — симулятор бумажной торговли для практики дисциплины. Это не брокер, не сигнальный сервис и не финансовый совет. Реальных денег нет. Рынки могут приносить убытки. Решения — на тебе.',
+    'Paper League is an educational paper-trading simulation. You practice first trade, stop, and journal with no real money. It is not a broker, not a signal service, and not financial advice. Markets can cause loss in real life. You are responsible for your decisions.',
+    es: 'Paper League es una simulación educativa de trading en papel. Practicas primera operación, stop y diario sin dinero real. No es un bróker, ni un servicio de señales, ni asesoramiento financiero. En la vida real los mercados pueden generar pérdidas. Tú eres responsable de tus decisiones.',
+    pt: 'Paper League é uma simulação educacional de trading em papel. Você pratica primeira operação, stop e diário sem dinheiro real. Não é uma corretora, nem um serviço de sinais, nem aconselhamento financeiro. Na vida real os mercados podem gerar perdas. Você é responsável pelas suas decisões.',
+    ru: 'Paper League — образовательная симуляция бумажной торговли. Ты отрабатываешь первую сделку, стоп и журнал без реальных денег. Это не брокер, не сигнальный сервис и не финансовый совет. В реальной жизни рынки могут приносить убытки. Решения — на тебе.',
   );
   String get acceptDisclaimer => t(
     'I understand this app is educational simulation only and not financial advice.',
@@ -1471,5 +1467,186 @@ class S {
     es: _es('OTRA VEZ'),
     pt: _pt('DE NOVO'),
     ru: 'ЕЩЁ РАЗ',
+  );
+
+  String get missionRailTitle => t(
+    'BEGINNER PATH',
+    es: 'RUTA PRINCIPIANTE',
+    pt: 'ROTA INICIANTE',
+    ru: 'ПУТЬ НОВИЧКА',
+  );
+  String get missionStart => t(
+    'START',
+    es: 'EMPEZAR',
+    pt: 'COMEÇAR',
+    ru: 'СТАРТ',
+  );
+  String get missionBuyLong => t(
+    'BUY LONG',
+    es: 'COMPRAR LONG',
+    pt: 'COMPRAR LONG',
+    ru: 'КУ LONG',
+  );
+  String get missionCloseJournal => t(
+    'CLOSE + JOURNAL',
+    es: 'CERRAR + DIARIO',
+    pt: 'FECHAR + DIÁRIO',
+    ru: 'ЗАКРЫТЬ + ЖУРНАЛ',
+  );
+  String get mission1Title => t(
+    'Read one candle',
+    es: 'Lee una vela',
+    pt: 'Leia um candle',
+    ru: 'Прочитай свечу',
+  );
+  String get mission1Body => t(
+    'Open, high, low, close — two quick checks.',
+    es: 'Open, high, low, close — dos chequeos rápidos.',
+    pt: 'Open, high, low, close — duas checagens rápidas.',
+    ru: 'Open, high, low, close — две быстрые проверки.',
+  );
+  String get mission1Explain => t(
+    'A candle shows the battle in one bar: Open starts the body, Close ends it, High and Low are the wicks.',
+    es: 'Una vela muestra la batalla en una barra: Open abre el cuerpo, Close lo cierra, High y Low son las mechas.',
+    pt: 'Um candle mostra a batalha em uma barra: Open inicia o corpo, Close encerra, High e Low são os pavios.',
+    ru: 'Свеча — бой за один бар: Open начинает тело, Close заканчивает, High и Low — тени.',
+  );
+  String get mission1Q1 => t(
+    'Where does the body start?',
+    es: '¿Dónde empieza el cuerpo?',
+    pt: 'Onde o corpo começa?',
+    ru: 'Где начинается тело?',
+  );
+  String get mission1Q1A => t(
+    'At the Open',
+    es: 'En el Open',
+    pt: 'No Open',
+    ru: 'На Open',
+  );
+  String get mission1Q1B => t(
+    'At the High',
+    es: 'En el High',
+    pt: 'No High',
+    ru: 'На High',
+  );
+  String get mission1Q2 => t(
+    'What decides if the candle is green or red?',
+    es: '¿Qué decide si la vela es verde o roja?',
+    pt: 'O que decide se o candle é verde ou vermelho?',
+    ru: 'Что делает свечу зелёной или красной?',
+  );
+  String get mission1Q2A => t(
+    'Only the High',
+    es: 'Solo el High',
+    pt: 'Só o High',
+    ru: 'Только High',
+  );
+  String get mission1Q2B => t(
+    'Close vs Open',
+    es: 'Close vs Open',
+    pt: 'Close vs Open',
+    ru: 'Close относительно Open',
+  );
+  String get mission1Wrong => t(
+    'Try the other answer — read the candle again.',
+    es: 'Prueba la otra respuesta — lee la vela otra vez.',
+    pt: 'Tente a outra resposta — leia o candle de novo.',
+    ru: 'Попробуй другой ответ — перечитай свечу.',
+  );
+  String get mission1Done => t(
+    'GOT IT',
+    es: 'ENTENDIDO',
+    pt: 'ENTENDI',
+    ru: 'ПОНЯЛ',
+  );
+  String get mission2Title => t(
+    'Open first paper trade',
+    es: 'Abre la primera operación en papel',
+    pt: 'Abra a primeira operação em papel',
+    ru: 'Открой первую бумажную сделку',
+  );
+  String get mission2Body => t(
+    'Buy Long with practice size. No real money.',
+    es: 'Buy Long con tamaño de práctica. Sin dinero real.',
+    pt: 'Buy Long com tamanho de prática. Sem dinheiro real.',
+    ru: 'Buy Long учебным размером. Без реальных денег.',
+  );
+  String get mission3Title => t(
+    'Place the stop',
+    es: 'Coloca el stop',
+    pt: 'Coloque o stop',
+    ru: 'Поставь стоп',
+  );
+  String get mission3Body => t(
+    'Protect the trade (~1.5% risk hint). Stop is required.',
+    es: 'Protege la operación (~1.5% riesgo). El stop es obligatorio.',
+    pt: 'Proteja a operação (~1.5% risco). O stop é obrigatório.',
+    ru: 'Защити сделку (~1.5% риска). Без стопа нельзя.',
+  );
+  String get mission3RiskHint => t(
+    '~1.5% risk',
+    es: '~1.5% riesgo',
+    pt: '~1.5% risco',
+    ru: '~1.5% риска',
+  );
+  String get mission4Title => t(
+    'Close + journal',
+    es: 'Cerrar + diario',
+    pt: 'Fechar + diário',
+    ru: 'Закрыть + журнал',
+  );
+  String get mission4Body => t(
+    'Close the trade and read the recap journal.',
+    es: 'Cierra la operación y lee el diario del recap.',
+    pt: 'Feche a operação e leia o diário do recap.',
+    ru: 'Закрой сделку и прочитай журнал-разбор.',
+  );
+  String get firstWinTitle => t(
+    'First win — process locked in',
+    es: 'Primera victoria — proceso fijado',
+    pt: 'Primeira vitória — processo travado',
+    ru: 'Первая победа — процесс закреплён',
+  );
+  String get firstWinBody => t(
+    'Streak day 1 starts. Daily Desk is unlocked. Save progress so you do not lose the path.',
+    es: 'Empieza la racha día 1. Daily Desk desbloqueado. Guarda el progreso para no perder la ruta.',
+    pt: 'Começa a sequência dia 1. Daily Desk desbloqueado. Salve o progresso para não perder a rota.',
+    ru: 'Стрик день 1. Daily Desk разблокирован. Сохрани прогресс, чтобы не потерять путь.',
+  );
+  String get dailyDeskUnlocked => t(
+    'Daily Desk unlocked',
+    es: 'Daily Desk desbloqueado',
+    pt: 'Daily Desk desbloqueado',
+    ru: 'Daily Desk открыт',
+  );
+  String get saveProgressCta => t(
+    'SAVE PROGRESS',
+    es: 'GUARDAR PROGRESO',
+    pt: 'SALVAR PROGRESSO',
+    ru: 'СОХРАНИТЬ ПРОГРЕСС',
+  );
+  String get remindLater => t(
+    'Remind later',
+    es: 'Recordar luego',
+    pt: 'Lembrar depois',
+    ru: 'Напомнить позже',
+  );
+  String get communityGateTitle => t(
+    '3 days of discipline',
+    es: '3 días de disciplina',
+    pt: '3 dias de disciplina',
+    ru: '3 дня дисциплины',
+  );
+  String get communityGateBody => t(
+    'You showed up three days. Join Desk Club for the weekly challenge — or not now.',
+    es: 'Viniste tres días. Únete a Desk Club por el reto semanal — o ahora no.',
+    pt: 'Você apareceu três dias. Entre no Desk Club pelo desafio semanal — ou agora não.',
+    ru: 'Ты зашёл три дня. Зайди в Desk Club за weekly challenge — или не сейчас.',
+  );
+  String get communityGateLater => t(
+    'Not now',
+    es: 'Ahora no',
+    pt: 'Agora não',
+    ru: 'Не сейчас',
   );
 }

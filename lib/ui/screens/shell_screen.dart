@@ -10,6 +10,7 @@ import 'package:paper_league/ui/screens/league_screen.dart';
 import 'package:paper_league/ui/screens/positions_screen.dart';
 import 'package:paper_league/ui/screens/profile_screen.dart';
 import 'package:paper_league/ui/widgets/achievements.dart';
+import 'package:paper_league/ui/widgets/beginner_path.dart';
 import 'package:paper_league/ui/widgets/recap_share_card.dart';
 import 'package:paper_league/ui/widgets/recap_sheet.dart';
 
@@ -25,6 +26,7 @@ class _ShellScreenState extends State<ShellScreen> {
   DeskController? _desk;
   bool _recapOpen = false;
   bool _achBusy = false;
+  bool _ceremonyBusy = false;
 
   static const _pages = [
     DeskScreen(),
@@ -65,12 +67,35 @@ class _ShellScreenState extends State<ShellScreen> {
         await _flushAchievements();
         if (!mounted) return;
         await _offerShareRitual();
+        if (!mounted) return;
+        await _runBeginnerCeremonies();
       });
       return;
     }
 
     if (!_recapOpen && desk.pendingAchievements.isNotEmpty) {
       _flushAchievements();
+    }
+
+    if (!_recapOpen && !_ceremonyBusy) {
+      _runBeginnerCeremonies();
+    }
+  }
+
+  Future<void> _runBeginnerCeremonies() async {
+    final desk = _desk;
+    if (desk == null || !mounted || _ceremonyBusy || _recapOpen) return;
+    _ceremonyBusy = true;
+    try {
+      if (desk.pendingFirstWinCeremony && !desk.firstWinCeremonySeen) {
+        await showFirstWinCeremony(context);
+      }
+      if (!mounted) return;
+      if (desk.pendingCommunityGate) {
+        await maybeShowCommunityGate(context);
+      }
+    } finally {
+      _ceremonyBusy = false;
     }
   }
 
@@ -113,6 +138,15 @@ class _ShellScreenState extends State<ShellScreen> {
     } finally {
       _achBusy = false;
     }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _runBeginnerCeremonies();
+    });
   }
 
   @override

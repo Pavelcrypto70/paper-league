@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
+import 'package:paper_league/config/app_links.dart';
 import 'package:paper_league/data/league_repository.dart';
 import 'package:paper_league/data/market_feed.dart';
 import 'package:paper_league/domain/achievements.dart';
@@ -73,6 +74,16 @@ class DeskController extends ChangeNotifier {
   bool firstGestureDone = false;
   bool tutorialTrade = false;
   bool tutorialStopSet = false;
+  /// Beginner path: 0=idle, 1=candle, 2=trade, 3=stop, 4=journal, 5=done.
+  int beginnerPathStep = 0;
+  bool communityGateShown = false;
+  bool communityGateAccepted = false;
+  bool communityGateDismissed = false;
+  bool firstWinCeremonySeen = false;
+  bool softAuthPromptSeen = false;
+  /// UI one-shot: shell should present first-win / community ceremonies.
+  bool pendingFirstWinCeremony = false;
+  bool pendingCommunityGate = false;
   DeskMeta meta = DeskMeta();
   SeasonProgress seasonProgress = SeasonProgress();
   /// One-shot juice cue for UI (fill / stop / tp / win / loss).
@@ -94,6 +105,12 @@ class DeskController extends ChangeNotifier {
   bool get needsFirstRunTrade => !firstStopTradeDone;
 
   bool get tabsUnlocked => firstGestureDone;
+
+  bool get beginnerPathActive => beginnerPathStep < 5;
+
+  int get beginnerMissionsDone => beginnerPathStep.clamp(0, 5) >= 5
+      ? 4
+      : (beginnerPathStep - 1).clamp(0, 4);
 
   bool get hasScoredProcess => history.isNotEmpty && !tutorialTrade;
 
@@ -379,7 +396,7 @@ class DeskController extends ChangeNotifier {
     return n;
   }
 
-  static const _freshStamp = 'paper_league_fresh_20260910';
+  static const _freshStamp = 'paper_league_fresh_20261004_beginner';
 
   static const _freshWipeKeys = [
     'firstGesture',
@@ -387,6 +404,12 @@ class DeskController extends ChangeNotifier {
     'firstStopTrade',
     'tutorialTrade',
     'tutorialStopSet',
+    'beginnerPathStep',
+    'communityGateShown',
+    'communityGateAccepted',
+    'communityGateDismissed',
+    'firstWinCeremonySeen',
+    'softAuthPromptSeen',
     'coachDone',
     'historyJson',
     'openPos',
@@ -448,6 +471,23 @@ class DeskController extends ChangeNotifier {
     tutorialTrade = _prefs?.getBool('tutorialTrade') ?? false;
     tutorialStopSet = _prefs?.getBool('tutorialStopSet') ?? false;
     firstGestureDone = _prefs?.getBool('firstGesture') ?? false;
+    communityGateShown = _prefs?.getBool('communityGateShown') ?? false;
+    communityGateAccepted = _prefs?.getBool('communityGateAccepted') ?? false;
+    communityGateDismissed = _prefs?.getBool('communityGateDismissed') ?? false;
+    firstWinCeremonySeen = _prefs?.getBool('firstWinCeremonySeen') ?? false;
+    softAuthPromptSeen = _prefs?.getBool('softAuthPromptSeen') ?? false;
+    final storedStep = _prefs?.getInt('beginnerPathStep');
+    if (storedStep != null) {
+      beginnerPathStep = storedStep.clamp(0, 5);
+    } else if (firstGestureDone) {
+      beginnerPathStep = 5;
+    } else {
+      beginnerPathStep = 0;
+    }
+    // Keep unlock flag aligned with path completion.
+    if (beginnerPathStep >= 5 && !firstGestureDone) {
+      firstGestureDone = true;
+    }
     seasonRewardIds
       ..clear()
       ..addAll(_prefs?.getStringList('seasonRewards') ?? const []);
@@ -462,6 +502,7 @@ class DeskController extends ChangeNotifier {
     weekEndsAt = SeasonClock.of(DateTime.now()).endsAt;
     _ensureSeasonProgress();
     _touchLoginStreak();
+    _queueCommunityGateIfNeeded();
 
     try {
       var anyLive = false;
@@ -970,6 +1011,12 @@ class DeskController extends ChangeNotifier {
     await p.setBool('tutorialTrade', tutorialTrade);
     await p.setBool('tutorialStopSet', tutorialStopSet);
     await p.setBool('firstGesture', firstGestureDone);
+    await p.setInt('beginnerPathStep', beginnerPathStep);
+    await p.setBool('communityGateShown', communityGateShown);
+    await p.setBool('communityGateAccepted', communityGateAccepted);
+    await p.setBool('communityGateDismissed', communityGateDismissed);
+    await p.setBool('firstWinCeremonySeen', firstWinCeremonySeen);
+    await p.setBool('softAuthPromptSeen', softAuthPromptSeen);
     await p.setDouble('peakEquity', peakEquity);
     await p.setDouble('maxDrawdown', maxDrawdown);
     await p.setString('timeframe', timeframe);
@@ -1429,16 +1476,39 @@ class DeskController extends ChangeNotifier {
     return trade;
   }
 
+  Future<void> ensureBeginnerPathStarted() async {
+    if (beginnerPathStep != 0) return;
+    beginnerPathStep = 1;
+    await _prefs?.setInt('beginnerPathStep', 1);
+    notifyListeners();
+  }
+
+  Future<void> completeCandleMission() async {
+    if (beginnerPathStep > 1) return;
+    beginnerPathStep = 2;
+    await _prefs?.setInt('beginnerPathStep', 2);
+    Analytics.log('mission_1_complete');
+    notifyListeners();
+  }
+
   Future<void> ensureTutorialTrade() async {
-    if (firstGestureDone || position != null || candles.isEmpty) return;
+    if (!beginnerPathActive || position != null || candles.isEmpty) return;
+    if (beginnerPathStep < 2) return;
     final entry = mark;
     if (entry <= 0) return;
-    placeMarket(
+    final err = placeMarket(
       side: Side.long,
       riskPct: 0.005,
       stop: entry * 0.55,
       tutorial: true,
     );
+    if (err != null) return;
+    if (beginnerPathStep < 3) {
+      beginnerPathStep = 3;
+      await _prefs?.setInt('beginnerPathStep', 3);
+      Analytics.log('mission_2_trade_open');
+      notifyListeners();
+    }
   }
 
   void placeTutorialStop() {
@@ -1451,6 +1521,11 @@ class DeskController extends ChangeNotifier {
     tutorialStopSet = true;
     firstStopTradeDone = true;
     unawaited(_prefs?.setBool('firstStopTrade', true));
+    if (beginnerPathStep < 4) {
+      beginnerPathStep = 4;
+      unawaited(_prefs?.setInt('beginnerPathStep', 4));
+      Analytics.log('mission_3_stop');
+    }
     unawaited(_persist());
     notifyListeners();
   }
@@ -1460,25 +1535,124 @@ class DeskController extends ChangeNotifier {
     tutorialTrade = false;
     tutorialStopSet = false;
     firstRunHintDone = true;
+    if (beginnerPathStep < 5) {
+      beginnerPathStep = 5;
+      await _prefs?.setInt('beginnerPathStep', 5);
+    }
     await _prefs?.setBool('firstGesture', true);
     await _prefs?.setBool('firstRunHint', true);
     await _prefs?.setBool('tutorialTrade', false);
+    Analytics.log('mission_4_journal');
+    Analytics.log('first_win');
+    Analytics.log('daily_desk_unlock');
+    if (!firstWinCeremonySeen) {
+      pendingFirstWinCeremony = true;
+    }
+    _queueCommunityGateIfNeeded();
     notifyListeners();
   }
 
   ClosedTrade? _closeTutorial(Position pos, double? exitOverride) {
     final exit = exitOverride ?? _markFor(pos.symbol);
     final fee = exit * pos.qty * MarketFeed.feeRate;
+    final gross = pos.side == Side.long
+        ? (exit - pos.entry) * pos.qty
+        : (pos.entry - exit) * pos.qty;
+    final pnl = gross - fee;
     cash += pos.qty * exit - fee;
-    position = null;
-    lastRecap = null;
+    final snap = _buildTapeSnapshot(pos, exit);
+    final trade = ClosedTrade(
+      id: pos.id,
+      symbol: pos.symbol,
+      side: pos.side,
+      qty: pos.qty,
+      entry: pos.entry,
+      exit: exit,
+      pnl: pnl,
+      rMultiple: pos.rMultiple(exit),
+      openedAt: pos.openedAt,
+      closedAt: DateTime.now(),
+      flags: const {RecapFlag.stopSet, RecapFlag.sizeOk, RecapFlag.noWiden, RecapFlag.noRevenge},
+      scoreDelta: 8,
+      tip: 'First trade protected. That is the desk process.',
+      stop: pos.stop,
+      tp: pos.tp,
+      mfe: snap.mfe,
+      mae: snap.mae,
+      exitKind: TradeExitKind.manual,
+      tape: snap.tape,
+      entryIndex: snap.entryIndex,
+      exitIndex: snap.exitIndex,
+    );
+    history.insert(0, trade);
+    lastRecap = trade;
     pendingShareRitual = null;
+    position = null;
     unawaited(completeFirstGesture());
     unawaited(_persist());
     pendingJuice = 'win';
     unawaited(DeskAudio.instance.play(DeskSfx.win));
     notifyListeners();
-    return null;
+    return trade;
+  }
+
+  Future<void> markFirstWinCeremonySeen() async {
+    firstWinCeremonySeen = true;
+    pendingFirstWinCeremony = false;
+    await _prefs?.setBool('firstWinCeremonySeen', true);
+    notifyListeners();
+  }
+
+  Future<void> markSoftAuthPromptSeen() async {
+    softAuthPromptSeen = true;
+    await _prefs?.setBool('softAuthPromptSeen', true);
+    notifyListeners();
+  }
+
+  void _queueCommunityGateIfNeeded() {
+    if (beginnerPathStep < 5 || communityGateAccepted) {
+      pendingCommunityGate = false;
+      return;
+    }
+    final streak = meta.loginStreak;
+    final canShow = (!communityGateShown && streak >= 3) ||
+        (communityGateDismissed && !communityGateAccepted && streak >= 7);
+    pendingCommunityGate = canShow;
+  }
+
+  Future<void> markCommunityGateShown() async {
+    communityGateShown = true;
+    pendingCommunityGate = false;
+    await _prefs?.setBool('communityGateShown', true);
+    Analytics.log('community_gate_shown');
+    notifyListeners();
+  }
+
+  Future<void> acceptCommunityGate() async {
+    communityGateAccepted = true;
+    communityGateDismissed = false;
+    communityGateShown = true;
+    pendingCommunityGate = false;
+    await _prefs?.setBool('communityGateAccepted', true);
+    await _prefs?.setBool('communityGateDismissed', false);
+    await _prefs?.setBool('communityGateShown', true);
+    Analytics.log('community_gate_accept');
+    Analytics.log('tg_cta_tap', {
+      'source': AppLinks.communitySource,
+      'gate': 'day3',
+      'url': AppLinks.communityUrl,
+    });
+    notifyListeners();
+  }
+
+  Future<void> dismissCommunityGate() async {
+    communityGateDismissed = true;
+    communityGateShown = true;
+    pendingCommunityGate = false;
+    await _prefs?.setBool('communityGateDismissed', true);
+    await _prefs?.setBool('communityGateShown', true);
+    Analytics.log('community_gate_dismiss');
+    notifyListeners();
   }
 
   ClosedTrade? closePosition({double? exitOverride, TradeExitKind? kind}) {
@@ -1667,6 +1841,14 @@ class DeskController extends ChangeNotifier {
     firstGestureDone = false;
     tutorialTrade = false;
     tutorialStopSet = false;
+    beginnerPathStep = 0;
+    communityGateShown = false;
+    communityGateAccepted = false;
+    communityGateDismissed = false;
+    firstWinCeremonySeen = false;
+    softAuthPromptSeen = false;
+    pendingFirstWinCeremony = false;
+    pendingCommunityGate = false;
     equityCurve
       ..clear()
       ..add(startingCash);
