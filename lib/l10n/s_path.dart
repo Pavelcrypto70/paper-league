@@ -747,11 +747,117 @@ extension PathStrings on S {
         pt: 'Um recap curto no fim',
         ru: 'Короткий разбор в конце',
       );
+  /// Habit-day task pack (days cycle the same bounce with a sharper focus).
+  String todayTask1For(int day) {
+    final d = ((day - 1) % 7) + 1;
+    return switch (d) {
+      2 => t(
+          'Same bounce again — 1–2 clean copies',
+          es: 'El mismo rebote otra vez — 1–2 copias limpias',
+          pt: 'O mesmo bounce de novo — 1–2 cópias limpas',
+          ru: 'Снова тот же отскок — 1–2 чистые копии',
+        ),
+      3 => t(
+          '1–2 copies · then peek at Desk Club',
+          es: '1–2 copias · luego mira Desk Club',
+          pt: '1–2 cópias · depois olhe o Desk Club',
+          ru: '1–2 копии · потом загляни в Desk Club',
+        ),
+      4 => t(
+          'Copy only if the zone looks like the replay',
+          es: 'Copia solo si la zona parece el replay',
+          pt: 'Copie só se a zona parecer o replay',
+          ru: 'Копируй только если зона похожа на реплей',
+        ),
+      5 => t(
+          'Two copies max · skip is allowed',
+          es: 'Máximo dos copias · saltar está bien',
+          pt: 'No máximo duas cópias · pular vale',
+          ru: 'Максимум две копии · пропуск можно',
+        ),
+      6 => t(
+          'Warm-up: one careful bounce copy',
+          es: 'Calentamiento: una copia cuidadosa del rebote',
+          pt: 'Aquecimento: uma cópia cuidadosa do bounce',
+          ru: 'Разминка: одна аккуратная копия отскока',
+        ),
+      7 => t(
+          'Week check: bounce + stop still automatic?',
+          es: 'Chequeo semanal: ¿rebote + stop ya automático?',
+          pt: 'Checagem da semana: bounce + stop já automático?',
+          ru: 'Проверка недели: отскок + стоп уже на автомате?',
+        ),
+      _ => todayTask1,
+    };
+  }
+
+  String todayTask2For(int day) {
+    final d = ((day - 1) % 7) + 1;
+    return switch (d) {
+      2 => t(
+          'Stop 1% every time — no exceptions',
+          es: 'Stop 1% siempre — sin excepciones',
+          pt: 'Stop 1% sempre — sem exceções',
+          ru: 'Стоп 1% каждый раз — без исключений',
+        ),
+      3 => t(
+          'Keep risk at 1% · note the live tease',
+          es: 'Mantén riesgo 1% · mira el teaser en vivo',
+          pt: 'Mantenha risco 1% · veja o teaser ao vivo',
+          ru: 'Риск 1% · обрати внимание на live-тизер',
+        ),
+      4 => t(
+          'If unsure — skip. Skipping scores discipline',
+          es: 'Si dudas — salta. Saltar suma disciplina',
+          pt: 'Se duvidar — pule. Pular soma disciplina',
+          ru: 'Если не уверен — пропусти. Пропуск = дисциплина',
+        ),
+      _ => todayTask2,
+    };
+  }
+
+  String todayTask3For(int day) {
+    final d = ((day - 1) % 7) + 1;
+    return switch (d) {
+      2 => t(
+          'Recap: what matched the replay?',
+          es: 'Recap: ¿qué coincidió con el replay?',
+          pt: 'Recap: o que bateu com o replay?',
+          ru: 'Разбор: что совпало с реплеем?',
+        ),
+      3 => t(
+          'Tomorrow’s live review uses this same bounce',
+          es: 'El review en vivo de mañana usa este mismo rebote',
+          pt: 'O review ao vivo de amanhã usa o mesmo bounce',
+          ru: 'Завтрашний live-разбор — про этот же отскок',
+        ),
+      _ => todayTask3,
+    };
+  }
+
   String get todayStart => t(
         'Start today',
         es: 'Empezar hoy',
         pt: 'Começar hoje',
         ru: 'Начать сегодня',
+      );
+  String get todayNextDay => t(
+        'Go to next day’s tasks',
+        es: 'Ir a las tareas del día siguiente',
+        pt: 'Ir às tarefas do próximo dia',
+        ru: 'К заданиям следующего дня',
+      );
+  String get todayDayDone => t(
+        'Desk for this day is done',
+        es: 'Desk de este día está hecho',
+        pt: 'Desk deste dia está feito',
+        ru: 'Desk за этот день закрыт',
+      );
+  String get todayNextHint => t(
+        'See what’s next — same move, sharper focus',
+        es: 'Mira lo siguiente — mismo movimiento, foco más nítido',
+        pt: 'Veja o que vem — mesmo movimento, foco mais nítido',
+        ru: 'Глянь что дальше — то же движение, жёстче фокус',
       );
   String get todayReplay => t(
         'Move 1 replay',

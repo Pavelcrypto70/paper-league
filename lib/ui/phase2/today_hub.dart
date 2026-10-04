@@ -81,11 +81,17 @@ class _TodayHub extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = S.of(context);
     final desk = context.watch<DeskController>();
-    final now = DateTime.now();
-    final wd = (now.weekday - 1).clamp(0, 6);
     final names = s.isRu ? _wdRu : _wdEn;
-    final dayNum = desk.habitDesksDone + (desk.move1CopyDone ? 1 : 0);
+    final dayNum = desk.habitPathDay;
+    final wd = (dayNum - 1) % 7;
     final streak = desk.meta.loginStreak;
+    final dayDone = desk.habitViewDayDone;
+    final canNext = desk.canAdvanceHabitDay;
+
+    // Task completion for the viewed day (honest checks, not always-on).
+    final t1Done = desk.move1Copies >= dayNum || desk.habitDesksDone >= dayNum;
+    final t2Done = t1Done; // stop is forced in the copy flow
+    final t3Done = desk.habitDesksDone >= dayNum || (dayNum == 1 && desk.move1CopyDone);
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
@@ -111,7 +117,7 @@ class _TodayHub extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 14),
-        _WeekRow(today: wd, streak: streak),
+        _WeekRow(focus: wd, desksDone: desk.habitDesksDone, viewDay: dayNum),
         const SizedBox(height: 16),
         PathCard(
           accent: true,
@@ -127,35 +133,46 @@ class _TodayHub extends StatelessWidget {
                     style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: PlColors.text),
                   ),
                   const Spacer(),
-                  PathChip(s.todayDeskMins),
+                  PathChip(dayDone ? s.todayDayDone : s.todayDeskMins, tone: dayDone ? PathTone.bull : PathTone.neutral),
                 ],
               ),
               const SizedBox(height: 12),
-              _Li(s.todayTask1),
-              _Li(s.todayTask2),
-              _Li(s.todayTask3),
+              _Li(s.todayTask1For(dayNum), done: t1Done),
+              _Li(s.todayTask2For(dayNum), done: t2Done),
+              _Li(s.todayTask3For(dayNum), done: t3Done),
               const SizedBox(height: 14),
-              PathButton(
-                desk.move1CopyDone ? s.todayStart : s.bridgeCta,
-                trailingIcon: Icons.arrow_forward_rounded,
-                pulse: !desk.move1CopyDone,
-                onPressed: () async {
-                  pathTap(strong: true);
-                  if (!desk.move1CopyDone) {
-                    await openMove1Flow(context, startAtCopy: desk.move1ReplaySeen);
-                    return;
-                  }
-                  // Start a short guided session: open move flow again as daily practice,
-                  // then count a habit desk when they finish a copy.
-                  final before = desk.move1Copies;
-                  await openMove1Flow(context, startAtCopy: true);
-                  if (!context.mounted) return;
-                  final after = context.read<DeskController>().move1Copies;
-                  if (after > before) {
-                    context.read<DeskController>().endTodaySession(countDesk: true);
-                  }
-                },
-              ),
+              if (canNext) ...[
+                PathButton(
+                  s.todayNextDay,
+                  trailingIcon: Icons.arrow_forward_rounded,
+                  pulse: true,
+                  onPressed: () async {
+                    pathTap(strong: true);
+                    await context.read<DeskController>().advanceHabitViewDay();
+                  },
+                ),
+                const SizedBox(height: 8),
+                Text(s.todayNextHint, textAlign: TextAlign.center, style: pathFineStyle),
+              ] else
+                PathButton(
+                  desk.move1CopyDone ? s.todayStart : s.bridgeCta,
+                  trailingIcon: Icons.arrow_forward_rounded,
+                  pulse: !desk.move1CopyDone,
+                  onPressed: () async {
+                    pathTap(strong: true);
+                    if (!desk.move1CopyDone) {
+                      await openMove1Flow(context, startAtCopy: desk.move1ReplaySeen);
+                      return;
+                    }
+                    final before = desk.move1Copies;
+                    await openMove1Flow(context, startAtCopy: true);
+                    if (!context.mounted) return;
+                    final after = context.read<DeskController>().move1Copies;
+                    if (after > before) {
+                      context.read<DeskController>().endTodaySession(countDesk: true);
+                    }
+                  },
+                ),
             ],
           ),
         ),
@@ -187,11 +204,11 @@ class _TodayHub extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         PathCard(
-          dim: desk.meta.loginStreak < 3 || desk.move1Copies < 2,
+          dim: desk.meta.loginStreak < 3 && dayNum < 3,
           child: Row(
             children: [
               Icon(
-                desk.meta.loginStreak >= 3 && desk.move1Copies >= 2
+                (desk.meta.loginStreak >= 3 && desk.move1Copies >= 2) || dayNum >= 3
                     ? Icons.send_rounded
                     : Icons.lock_outline_rounded,
                 size: 20,
@@ -220,15 +237,17 @@ class _TodayHub extends StatelessWidget {
 }
 
 class _WeekRow extends StatelessWidget {
-  const _WeekRow({required this.today, required this.streak});
-  final int today;
-  final int streak;
+  const _WeekRow({required this.focus, required this.desksDone, required this.viewDay});
+  final int focus;
+  final int desksDone;
+  final int viewDay;
 
   @override
   Widget build(BuildContext context) {
     final s = S.of(context);
     final names = s.isRu ? _wdRu : _wdEn;
-    // Mark the last `streak` days ending at today as done (simple visual).
+    // Habit week: Пн = day 1 of the current 7-day block.
+    final blockStart = ((viewDay - 1) ~/ 7) * 7;
     return Row(
       children: [
         for (var i = 0; i < 7; i++) ...[
@@ -242,18 +261,18 @@ class _WeekRow extends StatelessWidget {
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: _done(i) ? PlColors.bull : Colors.transparent,
+                    color: _done(i, blockStart) ? PlColors.bull : Colors.transparent,
                     border: Border.all(
-                      color: i == today
+                      color: i == focus
                           ? PlColors.accent
-                          : (_done(i) ? PlColors.bull : PlColors.line),
-                      width: i == today ? 2 : 1.5,
+                          : (_done(i, blockStart) ? PlColors.bull : PlColors.line),
+                      width: i == focus ? 2 : 1.5,
                     ),
-                    boxShadow: i == today
+                    boxShadow: i == focus
                         ? [BoxShadow(color: PlColors.accent.withValues(alpha: 0.14), spreadRadius: 4)]
                         : null,
                   ),
-                  child: _done(i)
+                  child: _done(i, blockStart)
                       ? const Icon(Icons.check_rounded, size: 16, color: PlColors.onBull)
                       : null,
                 ),
@@ -262,7 +281,7 @@ class _WeekRow extends StatelessWidget {
                   names[i],
                   style: pathMono(
                     size: 11,
-                    color: i == today ? PlColors.accent : PlColors.faint,
+                    color: i == focus ? PlColors.accent : PlColors.faint,
                   ),
                 ),
               ],
@@ -273,18 +292,16 @@ class _WeekRow extends StatelessWidget {
     );
   }
 
-  bool _done(int i) {
-    if (streak <= 0) return false;
-    // Days from (today - streak + 1) .. today, wrapped in week for visual only.
-    final start = today - (streak - 1);
-    if (start <= today) return i >= start && i <= today;
-    return i <= today || i >= start;
+  bool _done(int i, int blockStart) {
+    final day = blockStart + i + 1;
+    return desksDone >= day;
   }
 }
 
 class _Li extends StatelessWidget {
-  const _Li(this.text);
+  const _Li(this.text, {required this.done});
   final String text;
+  final bool done;
 
   @override
   Widget build(BuildContext context) {
@@ -292,9 +309,21 @@ class _Li extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         children: [
-          const Icon(Icons.check_rounded, size: 18, color: PlColors.accent),
+          Icon(
+            done ? Icons.check_rounded : Icons.circle_outlined,
+            size: 18,
+            color: done ? PlColors.accent : PlColors.faint,
+          ),
           const SizedBox(width: 10),
-          Expanded(child: Text(text, style: const TextStyle(fontSize: 14, color: PathInk.body))),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                fontSize: 14,
+                color: done ? PathInk.body : PlColors.muted,
+              ),
+            ),
+          ),
         ],
       ),
     );

@@ -101,6 +101,8 @@ class DeskController extends ChangeNotifier {
   bool todaySessionActive = false;
   /// Phase 2: desks completed while in habit mode.
   int habitDesksDone = 0;
+  /// Phase 2: which habit-day plan the Today hub is showing (1–28).
+  int habitViewDay = 1;
   /// UI one-shot: shell should present first-win / community ceremonies.
   bool pendingFirstWinCeremony = false;
   bool pendingCommunityGate = false;
@@ -150,6 +152,16 @@ class DeskController extends ChangeNotifier {
   }
 
   bool get move1CopyDone => move1Copies >= 1;
+
+  /// Path day number shown in the Today header (1–28).
+  int get habitPathDay => habitViewDay.clamp(1, 28);
+
+  /// Day N is complete once that many Daily Desks are closed.
+  /// Day 1 also counts after the first successful move copy (bridge/copy flow).
+  bool get habitViewDayDone =>
+      habitDesksDone >= habitViewDay || (habitViewDay == 1 && move1CopyDone);
+
+  bool get canAdvanceHabitDay => habitViewDayDone && habitViewDay < 28;
 
   /// Book opens after the first successful move copy.
   bool get bookTabUnlocked => firstGestureDone && move1CopyDone;
@@ -460,6 +472,7 @@ class DeskController extends ChangeNotifier {
     'move1ReplaySeen',
     'move1Copies',
     'habitDesksDone',
+    'habitViewDay',
     'moveCopyTrade',
     'tutorialRiskPct',
     'reminderHour',
@@ -547,6 +560,8 @@ class DeskController extends ChangeNotifier {
     move1ReplaySeen = _prefs?.getBool('move1ReplaySeen') ?? false;
     move1Copies = _prefs?.getInt('move1Copies') ?? 0;
     habitDesksDone = _prefs?.getInt('habitDesksDone') ?? 0;
+    // Default: stay on the last completed day so “next day” CTA is visible after a desk.
+    habitViewDay = (_prefs?.getInt('habitViewDay') ?? max(1, habitDesksDone)).clamp(1, 28);
     moveCopyTrade = _prefs?.getBool('moveCopyTrade') ?? false;
     final storedStep = _prefs?.getInt('beginnerPathStep');
     if (storedStep != null) {
@@ -1094,6 +1109,7 @@ class DeskController extends ChangeNotifier {
     await p.setBool('move1ReplaySeen', move1ReplaySeen);
     await p.setInt('move1Copies', move1Copies);
     await p.setInt('habitDesksDone', habitDesksDone);
+    await p.setInt('habitViewDay', habitViewDay);
     await p.setBool('moveCopyTrade', moveCopyTrade);
     if (tutorialRiskPct > 0) await p.setDouble('tutorialRiskPct', tutorialRiskPct);
     await p.setDouble('peakEquity', peakEquity);
@@ -1687,10 +1703,28 @@ class DeskController extends ChangeNotifier {
     todaySessionActive = false;
     if (countDesk) {
       habitDesksDone += 1;
+      // Keep the hub on the day just finished so the next-day button appears.
+      if (habitViewDay < habitDesksDone) {
+        habitViewDay = habitDesksDone;
+      }
       unawaited(_prefs?.setInt('habitDesksDone', habitDesksDone));
+      unawaited(_prefs?.setInt('habitViewDay', habitViewDay));
       unawaited(Analytics.log('daily_desk_complete', {'habit': habitDesksDone}));
       _queueCommunityGateIfNeeded();
     }
+    notifyListeners();
+  }
+
+  Future<void> advanceHabitViewDay() async {
+    if (!canAdvanceHabitDay) return;
+    // First copy without a counted desk still closes day 1 when they advance.
+    if (habitViewDay == 1 && habitDesksDone < 1 && move1CopyDone) {
+      habitDesksDone = 1;
+      await _prefs?.setInt('habitDesksDone', habitDesksDone);
+    }
+    habitViewDay = (habitViewDay + 1).clamp(1, 28);
+    await _prefs?.setInt('habitViewDay', habitViewDay);
+    Analytics.log('habit_day_advance', {'day': habitViewDay});
     notifyListeners();
   }
 
@@ -2116,6 +2150,7 @@ class DeskController extends ChangeNotifier {
     move1ReplaySeen = false;
     move1Copies = 0;
     habitDesksDone = 0;
+    habitViewDay = 1;
     moveCopyTrade = false;
     todaySessionActive = false;
     pendingFirstWinCeremony = false;
