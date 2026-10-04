@@ -7,7 +7,8 @@ import 'package:paper_league/services/desk_audio.dart';
 import 'package:paper_league/state/desk_controller.dart';
 import 'package:paper_league/theme/tokens.dart';
 import 'package:paper_league/ui/format.dart';
-import 'package:paper_league/ui/widgets/beginner_path.dart';
+import 'package:paper_league/ui/beginner/beginner_flow.dart';
+import 'package:paper_league/ui/beginner/beginner_home.dart';
 import 'package:paper_league/ui/widgets/candle_chart.dart';
 import 'package:paper_league/ui/widgets/daily_desk_strip.dart';
 import 'package:paper_league/ui/widgets/pulse_target.dart';
@@ -74,13 +75,8 @@ class _DeskScreenState extends State<DeskScreen> {
   Future<void> _openTicket(Side side) async {
     final desk = context.read<DeskController>();
     DeskAudio.instance.play(DeskSfx.tap);
-    // Beginner mission 2: Buy Long seeds the protected tutorial trade.
-    if (desk.beginnerPathActive && desk.beginnerPathStep == 2 && side == Side.long) {
-      await desk.ensureTutorialTrade();
-      return;
-    }
-    if (desk.beginnerPathActive && desk.beginnerPathStep < 2) {
-      await showCandleMissionSheet(context);
+    if (desk.beginnerPathActive) {
+      await openBeginnerFlow(context);
       return;
     }
     if (desk.needsLeagueNickname) {
@@ -128,7 +124,7 @@ class _DeskScreenState extends State<DeskScreen> {
     if (loading) return const _Skeleton();
 
     final desk = context.watch<DeskController>();
-    final pathActive = desk.beginnerPathActive;
+    if (desk.beginnerPathActive) return const BeginnerHome();
 
     return Stack(
       children: [
@@ -143,9 +139,8 @@ class _DeskScreenState extends State<DeskScreen> {
                   style: const TextStyle(color: PlColors.warn, fontWeight: FontWeight.w700, fontSize: 12),
                 ),
               ),
-            if (!pathActive) const DailyDeskStrip(),
-            if (!pathActive)
-              _DrawBar(
+            const DailyDeskStrip(),
+            _DrawBar(
                 tool: _tool,
                 onTool: (t) {
                   DeskAudio.instance.play(DeskSfx.tap);
@@ -158,9 +153,8 @@ class _DeskScreenState extends State<DeskScreen> {
                 },
               ),
             Expanded(child: _Chart(tool: _tool, clearToken: _clearToken)),
-            if (!pathActive) const _CoachBanner(),
+            const _CoachBanner(),
             const _PositionDock(),
-            if (pathActive) const BeginnerMissionRail(),
             _Actions(onTicket: _openTicket),
           ],
         ),

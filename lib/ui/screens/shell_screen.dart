@@ -10,7 +10,7 @@ import 'package:paper_league/ui/screens/league_screen.dart';
 import 'package:paper_league/ui/screens/positions_screen.dart';
 import 'package:paper_league/ui/screens/profile_screen.dart';
 import 'package:paper_league/ui/widgets/achievements.dart';
-import 'package:paper_league/ui/widgets/beginner_path.dart';
+import 'package:paper_league/ui/beginner/path_ceremonies.dart';
 import 'package:paper_league/ui/widgets/recap_share_card.dart';
 import 'package:paper_league/ui/widgets/recap_sheet.dart';
 

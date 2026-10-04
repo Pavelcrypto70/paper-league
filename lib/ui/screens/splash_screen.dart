@@ -4,7 +4,9 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:paper_league/l10n/s.dart';
+import 'package:paper_league/l10n/s_path.dart';
 import 'package:paper_league/theme/tokens.dart';
+import 'package:paper_league/ui/beginner/path_kit.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key, required this.onDone});
@@ -163,7 +165,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                         ),
                         const SizedBox(width: 10),
                         Text(
-                          s.splashTag,
+                          s.splashMark,
                           style: Theme.of(context).textTheme.labelSmall?.copyWith(
                                 color: PlColors.accent,
                                 fontWeight: FontWeight.w800,
@@ -177,7 +179,6 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
 
                   const Spacer(flex: 5),
 
-                  // Brand — hero signal
                   AnimatedBuilder(
                     animation: _enter,
                     builder: (context, child) {
@@ -189,18 +190,9 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                         ),
                       );
                     },
-                    child: Text(
-                      s.splashMark,
-                      style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                            fontSize: 34,
-                            height: 1,
-                            letterSpacing: 2.4,
-                            fontWeight: FontWeight.w700,
-                            color: PlColors.text,
-                          ),
-                    ),
+                    child: PathChip(s.promiseChip, tone: PathTone.accent),
                   ),
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 16),
 
                   // Headline
                   AnimatedBuilder(
@@ -217,25 +209,40 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                     child: Text(
                       s.splashTitle,
                       style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                            fontSize: 46,
-                            height: 0.98,
-                            letterSpacing: -1.8,
+                            fontSize: 40,
+                            height: 1.02,
+                            letterSpacing: -1.4,
                             fontWeight: FontWeight.w600,
                             color: PlColors.text,
                           ),
                     ),
                   ),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 12),
 
                   FadeTransition(
                     opacity: _subOp,
-                    child: Text(
-                      s.splashSub,
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: PlColors.muted,
-                            height: 1.4,
-                            fontSize: 15,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(s.promiseSub, style: pathSubStyle),
+                        const SizedBox(height: 16),
+                        for (final line in [s.promiseB1, s.promiseB2, s.promiseB3])
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 11),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.check_rounded, size: 18, color: PlColors.accent),
+                                const SizedBox(width: 11),
+                                Expanded(
+                                  child: Text(
+                                    line,
+                                    style: const TextStyle(fontSize: 15, color: PathInk.body),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
+                      ],
                     ),
                   ),
 
@@ -276,20 +283,23 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                                 ),
                               ),
                               onPressed: _enterDesk,
-                              child: Text(
-                                s.enterDesk,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w900,
-                                  letterSpacing: 1.0,
-                                  fontSize: 15,
-                                ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    s.promiseCta,
+                                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  const Icon(Icons.arrow_forward_rounded, size: 18),
+                                ],
                               ),
                             ),
                           ),
                         ),
                         const SizedBox(height: 14),
                         Text(
-                          s.eduOnly,
+                          s.promiseFine,
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                 color: PlColors.faint,
                                 letterSpacing: 0.2,

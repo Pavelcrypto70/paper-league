@@ -34,6 +34,7 @@ class _LeagueScreenState extends State<LeagueScreen> with SingleTickerProviderSt
     _intro = AnimationController(vsync: this, duration: PlMotion.emphasis)..forward();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final desk = context.read<DeskController>();
+      if (!desk.tabsUnlocked || desk.history.length < 2) return;
       desk.noteSeasonRank(desk.yourRank);
       await maybeShowSeasonCeremony(
         context,

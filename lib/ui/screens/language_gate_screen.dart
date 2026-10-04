@@ -2,13 +2,39 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:paper_league/l10n/s.dart';
 import 'package:paper_league/theme/tokens.dart';
+import 'package:paper_league/ui/beginner/path_kit.dart';
 
 /// The first visible product screen. It deliberately uses native language
 /// names so a user never has to understand an already-selected locale.
-class LanguageGateScreen extends StatelessWidget {
+class LanguageGateScreen extends StatefulWidget {
   const LanguageGateScreen({super.key, required this.onPick});
 
   final Future<void> Function(AppLang language) onPick;
+
+  @override
+  State<LanguageGateScreen> createState() => _LanguageGateScreenState();
+}
+
+class _LanguageGateScreenState extends State<LanguageGateScreen> {
+  late AppLang _lang = AppLang.fromCode(
+    WidgetsBinding.instance.platformDispatcher.locale.languageCode,
+  );
+  bool _busy = false;
+
+  String get _continue => switch (_lang) {
+        AppLang.en => 'Continue',
+        AppLang.es => 'Continuar',
+        AppLang.pt => 'Continuar',
+        AppLang.ru => 'Продолжить',
+      };
+
+  Future<void> _go() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    HapticFeedback.mediumImpact();
+    await widget.onPick(_lang);
+    if (mounted) setState(() => _busy = false);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -16,55 +42,64 @@ class LanguageGateScreen extends StatelessWidget {
       backgroundColor: PlColors.bg,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
+          padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: PlColors.accentDim,
-                  border: Border.all(color: PlColors.line),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Text(
-                  'PAPER LEAGUE · SEASON 28D',
-                  style: TextStyle(
-                    color: PlColors.accent,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 1.1,
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const SizedBox(height: 24),
+                      Center(
+                        child: Container(
+                          width: 72,
+                          height: 72,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: PlColors.accentDim,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: PathInk.accentLine),
+                          ),
+                          child: Text('PL', style: pathMono(size: 26, weight: FontWeight.w700, color: PlColors.accent)),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Choose your language',
+                        textAlign: TextAlign.center,
+                        style: pathTitleStyle(context),
+                      ),
+                      const SizedBox(height: 6),
+                      const Text(
+                        'Elige tu idioma · Escolha seu idioma · Выберите язык',
+                        textAlign: TextAlign.center,
+                        style: pathSubStyle,
+                      ),
+                      const SizedBox(height: 22),
+                      for (final language in AppLang.values) ...[
+                        _LanguageOption(
+                          language: language,
+                          selected: language == _lang,
+                          onTap: () {
+                            HapticFeedback.selectionClick();
+                            setState(() => _lang = language);
+                          },
+                        ),
+                        const SizedBox(height: 10),
+                      ],
+                    ],
                   ),
                 ),
               ),
-              const Spacer(),
-              Text(
-                'Choose your language',
-                style: Theme.of(context).textTheme.headlineMedium,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Elige tu idioma · Escolha seu idioma · Выберите язык',
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 28),
-              for (final language in AppLang.values) ...[
-                _LanguageOption(
-                  language: language,
-                  onTap: () async {
-                    HapticFeedback.selectionClick();
-                    await onPick(language);
-                  },
-                ),
-                const SizedBox(height: 10),
-              ],
-              const Spacer(),
+              const SizedBox(height: 12),
+              PathButton(_continue, onPressed: _busy ? null : _go),
+              const SizedBox(height: 10),
               const Text(
                 'You can change this later in Profile.',
-                style: TextStyle(color: PlColors.muted, fontSize: 12),
+                textAlign: TextAlign.center,
+                style: pathFineStyle,
               ),
             ],
           ),
@@ -75,51 +110,56 @@ class LanguageGateScreen extends StatelessWidget {
 }
 
 class _LanguageOption extends StatelessWidget {
-  const _LanguageOption({required this.language, required this.onTap});
+  const _LanguageOption({required this.language, required this.selected, required this.onTap});
 
   final AppLang language;
+  final bool selected;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final subtitle = switch (language) {
-      AppLang.en => 'English',
-      AppLang.es => 'Latinoamérica',
-      AppLang.pt => 'Brasil',
-      AppLang.ru => 'Русский',
-    };
     return Material(
-      color: PlColors.surface,
-      borderRadius: BorderRadius.circular(PlRadius.md),
+      color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(PlRadius.md),
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        borderRadius: BorderRadius.circular(14),
+        child: AnimatedContainer(
+          duration: PlMotion.micro,
+          height: 60,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
-            border: Border.all(color: PlColors.line),
-            borderRadius: BorderRadius.circular(PlRadius.md),
+            color: selected ? PlColors.accentDim : PlColors.surface,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: selected ? PlColors.accent : PlColors.lineSoft),
           ),
           child: Row(
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      language.nativeLabel,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      subtitle,
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ],
+              AnimatedContainer(
+                duration: PlMotion.micro,
+                width: 38,
+                height: 28,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: selected ? PlColors.accent : PlColors.surface2,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  language.name.toUpperCase(),
+                  style: pathMono(
+                    size: 13,
+                    weight: FontWeight.w700,
+                    color: selected ? PlColors.onAccent : PlColors.muted,
+                  ),
                 ),
               ),
-              const Icon(Icons.arrow_forward_rounded, color: PlColors.accent),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(
+                  language.nativeLabel,
+                  style: const TextStyle(fontSize: 17, color: PlColors.text),
+                ),
+              ),
+              if (selected) const Icon(Icons.check_rounded, color: PlColors.accent, size: 22),
             ],
           ),
         ),

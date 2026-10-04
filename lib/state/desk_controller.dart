@@ -81,6 +81,12 @@ class DeskController extends ChangeNotifier {
   bool communityGateDismissed = false;
   bool firstWinCeremonySeen = false;
   bool softAuthPromptSeen = false;
+  /// Risk fraction chosen in mission 3 (0.005 / 0.01 / 0.02).
+  double tutorialRiskPct = 0.01;
+  /// Closed tutorial trade awaiting the mission 4 journal (memory only).
+  ClosedTrade? lastTutorialTrade;
+  /// Daily Desk reminder hour picked after the first win (null = off).
+  int? reminderHour;
   /// UI one-shot: shell should present first-win / community ceremonies.
   bool pendingFirstWinCeremony = false;
   bool pendingCommunityGate = false;
@@ -141,9 +147,9 @@ class DeskController extends ChangeNotifier {
   double get equity {
     final pos = position;
     if (pos == null) return cash;
-    // Mark from the position's book
+    // Cash holds entry notional as collateral while the position is open.
     final m = _markFor(pos.symbol);
-    return cash + pos.unrealized(m);
+    return cash + pos.qty * pos.entry + pos.unrealized(m);
   }
 
   double _markFor(String symbol) {
@@ -396,9 +402,11 @@ class DeskController extends ChangeNotifier {
     return n;
   }
 
-  static const _freshStamp = 'paper_league_fresh_20261004_beginner';
+  static const _freshStamp = 'paper_league_fresh_20261004_beginner_v2';
 
   static const _freshWipeKeys = [
+    'tutorialRiskPct',
+    'reminderHour',
     'firstGesture',
     'firstRunHint',
     'firstStopTrade',
@@ -476,6 +484,8 @@ class DeskController extends ChangeNotifier {
     communityGateDismissed = _prefs?.getBool('communityGateDismissed') ?? false;
     firstWinCeremonySeen = _prefs?.getBool('firstWinCeremonySeen') ?? false;
     softAuthPromptSeen = _prefs?.getBool('softAuthPromptSeen') ?? false;
+    tutorialRiskPct = _prefs?.getDouble('tutorialRiskPct') ?? 0.01;
+    reminderHour = _prefs?.getInt('reminderHour');
     final storedStep = _prefs?.getInt('beginnerPathStep');
     if (storedStep != null) {
       beginnerPathStep = storedStep.clamp(0, 5);
@@ -1309,7 +1319,7 @@ class DeskController extends ChangeNotifier {
       _deferStops = false;
       return;
     }
-    if (tutorialTrade && !tutorialStopSet) return;
+    if (tutorialTrade) return;
     final pos = position;
     if (pos == null) return;
     final c = books[pos.symbol];
@@ -1341,6 +1351,7 @@ class DeskController extends ChangeNotifier {
     required double stop,
     double? tp,
     double? entryOverride,
+    double? qtyOverride,
     bool tutorial = false,
   }) {
     if (position != null) return 'close_first';
@@ -1350,7 +1361,8 @@ class DeskController extends ChangeNotifier {
     if (side == Side.short && stop <= entry) return 'stop_short';
 
     final clampedRisk = riskPct.clamp(0.005, 0.05);
-    var qty = qtyForRisk(side: side, entry: entry, stop: stop, riskPct: clampedRisk);
+    var qty = qtyOverride ??
+        qtyForRisk(side: side, entry: entry, stop: stop, riskPct: clampedRisk);
     if (qty * entry * (1 + MarketFeed.feeRate) > cash) {
       qty = (cash * 0.98) / entry;
     }
@@ -1424,7 +1436,7 @@ class DeskController extends ChangeNotifier {
     final gross = pos.side == Side.long ? (m - pos.entry) * closeQty : (pos.entry - m) * closeQty;
     final fee = m * closeQty * MarketFeed.feeRate;
     final pnl = gross - fee;
-    cash += closeQty * m - fee;
+    cash += closeQty * pos.entry + gross - fee;
 
     final snap = _buildTapeSnapshot(pos, m);
     position = Position(
@@ -1491,15 +1503,36 @@ class DeskController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Fixed practice size for mission 2: ~90% of cash, rounded down to 2 significant digits.
+  double get tutorialQtyPreview {
+    final entry = mark;
+    if (entry <= 0) return 0;
+    final raw = cash * 0.9 / entry;
+    if (raw <= 0) return 0;
+    final mag = pow(10, (log(raw) / ln10).floor() - 1).toDouble();
+    return (raw / mag).floorToDouble() * mag;
+  }
+
+  /// Stop price that risks [riskPct] of equity on the open tutorial position.
+  double? tutorialStopFor(double riskPct) {
+    final pos = position;
+    if (pos == null || pos.qty <= 0) return null;
+    final dist = equity * riskPct / pos.qty;
+    return pos.side == Side.long ? pos.entry - dist : pos.entry + dist;
+  }
+
   Future<void> ensureTutorialTrade() async {
     if (!beginnerPathActive || position != null || candles.isEmpty) return;
     if (beginnerPathStep < 2) return;
     final entry = mark;
     if (entry <= 0) return;
+    final qty = tutorialQtyPreview;
+    if (qty <= 0) return;
     final err = placeMarket(
       side: Side.long,
       riskPct: 0.005,
       stop: entry * 0.55,
+      qtyOverride: qty,
       tutorial: true,
     );
     if (err != null) return;
@@ -1511,13 +1544,14 @@ class DeskController extends ChangeNotifier {
     }
   }
 
-  void placeTutorialStop() {
+  void placeTutorialStop({double riskPct = 0.01}) {
     final pos = position;
     if (pos == null || !tutorialTrade) return;
-    final m = _markFor(pos.symbol);
-    if (m <= 0) return;
-    final next = pos.side == Side.long ? m * 0.985 : m * 1.015;
+    final next = tutorialStopFor(riskPct);
+    if (next == null || next <= 0) return;
     pos.stop = next;
+    tutorialRiskPct = riskPct;
+    unawaited(_prefs?.setDouble('tutorialRiskPct', riskPct));
     tutorialStopSet = true;
     firstStopTradeDone = true;
     unawaited(_prefs?.setBool('firstStopTrade', true));
@@ -1530,7 +1564,24 @@ class DeskController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> completeFirstGesture() async {
+  /// Mission 4 "Got it": unlocks the desk. The flow screen runs its own ceremony.
+  Future<void> finishBeginnerPath() async {
+    lastTutorialTrade = null;
+    await completeFirstGesture(queueCeremonies: false);
+  }
+
+  Future<void> setReminderHour(int? hour) async {
+    reminderHour = hour;
+    if (hour == null) {
+      await _prefs?.remove('reminderHour');
+    } else {
+      await _prefs?.setInt('reminderHour', hour);
+      Analytics.log('reminder_opt_in', {'hour': hour});
+    }
+    notifyListeners();
+  }
+
+  Future<void> completeFirstGesture({bool queueCeremonies = true}) async {
     firstGestureDone = true;
     tutorialTrade = false;
     tutorialStopSet = false;
@@ -1545,10 +1596,10 @@ class DeskController extends ChangeNotifier {
     Analytics.log('mission_4_journal');
     Analytics.log('first_win');
     Analytics.log('daily_desk_unlock');
-    if (!firstWinCeremonySeen) {
-      pendingFirstWinCeremony = true;
+    if (queueCeremonies) {
+      if (!firstWinCeremonySeen) pendingFirstWinCeremony = true;
+      _queueCommunityGateIfNeeded();
     }
-    _queueCommunityGateIfNeeded();
     notifyListeners();
   }
 
@@ -1559,7 +1610,7 @@ class DeskController extends ChangeNotifier {
         ? (exit - pos.entry) * pos.qty
         : (pos.entry - exit) * pos.qty;
     final pnl = gross - fee;
-    cash += pos.qty * exit - fee;
+    cash += pos.qty * pos.entry + gross - fee;
     final snap = _buildTapeSnapshot(pos, exit);
     final trade = ClosedTrade(
       id: pos.id,
@@ -1585,10 +1636,9 @@ class DeskController extends ChangeNotifier {
       exitIndex: snap.exitIndex,
     );
     history.insert(0, trade);
-    lastRecap = trade;
+    lastTutorialTrade = trade;
     pendingShareRitual = null;
     position = null;
-    unawaited(completeFirstGesture());
     unawaited(_persist());
     pendingJuice = 'win';
     unawaited(DeskAudio.instance.play(DeskSfx.win));
@@ -1668,9 +1718,9 @@ class DeskController extends ChangeNotifier {
         : (pos.entry - exit) * pos.qty;
     final fee = exit * pos.qty * MarketFeed.feeRate;
     final pnl = gross - fee;
-    cash += pos.qty * exit - fee;
+    cash += pos.qty * pos.entry + gross - fee;
 
-    final accountBase = max(cash + pos.qty * pos.entry, 1.0);
+    final accountBase = max(cash - pnl, 1.0);
     final flags = <RecapFlag>{
       RecapFlag.stopSet,
       if (pos.riskAmount() / accountBase <= 0.05) RecapFlag.sizeOk,
@@ -1842,6 +1892,8 @@ class DeskController extends ChangeNotifier {
     tutorialTrade = false;
     tutorialStopSet = false;
     beginnerPathStep = 0;
+    tutorialRiskPct = 0.01;
+    lastTutorialTrade = null;
     communityGateShown = false;
     communityGateAccepted = false;
     communityGateDismissed = false;
