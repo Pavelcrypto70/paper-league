@@ -515,7 +515,7 @@ class DeskController extends ChangeNotifier {
     return n;
   }
 
-  static const _freshStamp = 'paper_league_fresh_20261005_phase3c';
+  static const _freshStamp = 'paper_league_fresh_20261005_phase3d';
 
   static const _freshWipeKeys = [
     'orientStep',
@@ -582,13 +582,20 @@ class DeskController extends ChangeNotifier {
   static Future<void> applyQaPreset(String? preset) async {
     if (preset == null || preset.isEmpty) return;
     final p = await SharedPreferences.getInstance();
+
+    // Always skip language + legal when any QA preset is in the URL — even if
+    // progress was already applied (old sessions may have qaPresetApplied
+    // without lang_chosen, which otherwise early-returns onto the language gate).
+    await p.setString('lang', 'ru');
+    await p.setBool('lang_chosen_v1', true);
+    await p.setBool('disclaimer_accepted_v1', true);
+
     final done = p.getString('qaPresetApplied');
     if (done == preset && _qaPresetLooksApplied(p, preset)) return;
     for (final key in _freshWipeKeys) {
       await p.remove(key);
     }
-    // Skip language + legal gates for automated / QA browsers (Flutter canvas
-    // click automation is unreliable). Real users still see the gates on fresh.
+    // Re-apply gate skip after wipe (wipe removes nothing for these keys, but be explicit).
     await p.setString('lang', 'ru');
     await p.setBool('lang_chosen_v1', true);
     await p.setBool('disclaimer_accepted_v1', true);
