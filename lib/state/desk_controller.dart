@@ -76,6 +76,8 @@ class DeskController extends ChangeNotifier {
   bool tutorialStopSet = false;
   /// Beginner path: 0=idle, 1=candle, 2=trade, 3=stop, 4=journal, 5=done.
   int beginnerPathStep = 0;
+  /// Floor 0 orientation: 0=chart, 1=btc, 2=candle highlight, 3=done.
+  int orientStep = 0;
   bool communityGateShown = false;
   bool communityGateAccepted = false;
   bool communityGateDismissed = false;
@@ -126,9 +128,26 @@ class DeskController extends ChangeNotifier {
 
   bool get beginnerPathActive => beginnerPathStep < 5;
 
+  bool get orientDone => orientStep >= 3;
+
+  /// Show chart/BTC/candle orientation before the mission rail.
+  bool get showOrientation => beginnerPathActive && !orientDone;
+
   int get beginnerMissionsDone => beginnerPathStep.clamp(0, 5) >= 5
       ? 4
       : (beginnerPathStep - 1).clamp(0, 4);
+
+  /// Recent swing low — the “buy line” we highlight on move-1 copy.
+  double? get move1BounceLine {
+    final c = candles;
+    if (c.length < 8) return null;
+    final from = max(0, c.length - 28);
+    var low = c[from].low;
+    for (var i = from; i < c.length; i++) {
+      if (c[i].low < low) low = c[i].low;
+    }
+    return low;
+  }
 
   bool get move1CopyDone => move1Copies >= 1;
 
@@ -433,9 +452,10 @@ class DeskController extends ChangeNotifier {
     return n;
   }
 
-  static const _freshStamp = 'paper_league_fresh_20261005_phase2';
+  static const _freshStamp = 'paper_league_fresh_20261005_orient';
 
   static const _freshWipeKeys = [
+    'orientStep',
     'phase2BridgeSeen',
     'move1ReplaySeen',
     'move1Copies',
@@ -522,6 +542,7 @@ class DeskController extends ChangeNotifier {
     softAuthPromptSeen = _prefs?.getBool('softAuthPromptSeen') ?? false;
     tutorialRiskPct = _prefs?.getDouble('tutorialRiskPct') ?? 0.01;
     reminderHour = _prefs?.getInt('reminderHour');
+    orientStep = (_prefs?.getInt('orientStep') ?? 0).clamp(0, 3);
     phase2BridgeSeen = _prefs?.getBool('phase2BridgeSeen') ?? false;
     move1ReplaySeen = _prefs?.getBool('move1ReplaySeen') ?? false;
     move1Copies = _prefs?.getInt('move1Copies') ?? 0;
@@ -1068,6 +1089,7 @@ class DeskController extends ChangeNotifier {
     await p.setBool('communityGateDismissed', communityGateDismissed);
     await p.setBool('firstWinCeremonySeen', firstWinCeremonySeen);
     await p.setBool('softAuthPromptSeen', softAuthPromptSeen);
+    await p.setInt('orientStep', orientStep);
     await p.setBool('phase2BridgeSeen', phase2BridgeSeen);
     await p.setBool('move1ReplaySeen', move1ReplaySeen);
     await p.setInt('move1Copies', move1Copies);
@@ -1628,6 +1650,20 @@ class DeskController extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> advanceOrientation() async {
+    if (orientStep >= 3) return;
+    orientStep += 1;
+    await _prefs?.setInt('orientStep', orientStep);
+    final event = switch (orientStep) {
+      1 => 'orient_chart_seen',
+      2 => 'orient_btc_seen',
+      3 => 'orient_candle_seen',
+      _ => 'orient_step',
+    };
+    Analytics.log(event);
+    notifyListeners();
+  }
+
   Future<void> markPhase2BridgeSeen() async {
     phase2BridgeSeen = true;
     await _prefs?.setBool('phase2BridgeSeen', true);
@@ -2075,6 +2111,7 @@ class DeskController extends ChangeNotifier {
     communityGateDismissed = false;
     firstWinCeremonySeen = false;
     softAuthPromptSeen = false;
+    orientStep = 0;
     phase2BridgeSeen = false;
     move1ReplaySeen = false;
     move1Copies = 0;

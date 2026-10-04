@@ -50,6 +50,8 @@ class CandleChart extends StatefulWidget {
     this.onTpDrag,
     this.seedLevels = const [],
     this.seedToken = 0,
+    this.guideLevel,
+    this.guideTag,
   });
 
   final List<Candle> candles;
@@ -63,6 +65,9 @@ class CandleChart extends StatefulWidget {
   /// Absolute price levels injected from playbooks.
   final List<double> seedLevels;
   final int seedToken;
+  /// Bright teaching line (e.g. BUY zone) — thicker + labeled.
+  final double? guideLevel;
+  final String? guideTag;
 
   @override
   State<CandleChart> createState() => _CandleChartState();
@@ -155,6 +160,7 @@ class _CandleChartState extends State<CandleChart> {
                     entry: widget.entry,
                     stop: widget.stop,
                     tp: widget.tp,
+                    guideLevel: widget.guideLevel,
                     shapes: _shapes,
                   );
                   return GestureDetector(
@@ -177,6 +183,8 @@ class _CandleChartState extends State<CandleChart> {
                               entry: widget.entry,
                               stop: widget.stop,
                               tp: widget.tp,
+                              guideLevel: widget.guideLevel,
+                              guideTag: widget.guideTag,
                               cross: _cross,
                               draftStart: _draftStart,
                               draftEnd: _draftEnd,
@@ -505,6 +513,7 @@ class _ChartMetrics {
     double? entry,
     double? stop,
     double? tp,
+    double? guideLevel,
     List<_Shape> shapes = const [],
   }) {
     final volH = size.height * 0.14;
@@ -518,7 +527,7 @@ class _ChartMetrics {
       minP = math.min(minP, c.low);
       maxP = math.max(maxP, c.high);
     }
-    for (final p in [entry, stop, tp]) {
+    for (final p in [entry, stop, tp, guideLevel]) {
       if (p == null) continue;
       minP = math.min(minP, p);
       maxP = math.max(maxP, p);
@@ -574,6 +583,8 @@ class _CandlePainter extends CustomPainter {
     this.entry,
     this.stop,
     this.tp,
+    this.guideLevel,
+    this.guideTag,
     this.cross,
     this.draftStart,
     this.draftEnd,
@@ -589,6 +600,8 @@ class _CandlePainter extends CustomPainter {
   final double? entry;
   final double? stop;
   final double? tp;
+  final double? guideLevel;
+  final String? guideTag;
   final Offset? cross;
   final Offset? draftStart;
   final Offset? draftEnd;
@@ -609,6 +622,13 @@ class _CandlePainter extends CustomPainter {
       );
     canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), bg);
 
+    if (guideLevel != null) {
+      final gy = m.yFor(guideLevel!);
+      canvas.drawRect(
+        Rect.fromLTRB(0, gy - 18, plotW, gy + 18),
+        Paint()..color = PlColors.accent.withValues(alpha: 0.12),
+      );
+    }
     if (entry != null && stop != null) {
       final y1 = m.yFor(entry!);
       final y2 = m.yFor(stop!);
@@ -748,6 +768,22 @@ class _CandlePainter extends CustomPainter {
       }
     }
 
+    if (guideLevel != null) {
+      final tag = (guideTag == null || guideTag!.isEmpty) ? 'BUY' : guideTag!;
+      final y = m.yFor(guideLevel!);
+      // Solid underlay so “this line” is obvious even on busy candles.
+      canvas.drawLine(
+        Offset(0, y),
+        Offset(plotW, y),
+        Paint()
+          ..color = PlColors.accent.withValues(alpha: 0.55)
+          ..strokeWidth = 3.2,
+      );
+      _dashH(canvas, y, plotW, PlColors.accent, 2.2);
+      canvas.drawCircle(Offset(14, y), 7, Paint()..color = PlColors.accent.withValues(alpha: 0.4));
+      canvas.drawCircle(Offset(14, y), 3.8, Paint()..color = PlColors.accent);
+      _pill(canvas, plotW, y, '$tag ${_fmt(guideLevel!)}', PlColors.accent, m);
+    }
     level(entry, PlColors.accent, 'IN', false);
     level(tp, PlColors.bull, 'TP', dragging == _DragKind.tp);
     level(stop, PlColors.bear, 'SL', dragging == _DragKind.stop);
@@ -877,6 +913,8 @@ class _CandlePainter extends CustomPainter {
         old.entry != entry ||
         old.stop != stop ||
         old.tp != tp ||
+        old.guideLevel != guideLevel ||
+        old.guideTag != guideTag ||
         old.cross != cross ||
         old.draftStart != draftStart ||
         old.draftEnd != draftEnd ||

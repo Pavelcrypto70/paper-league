@@ -499,6 +499,59 @@ extension PathStrings on S {
         ru: 'Смотреть live-разбор',
       );
 
+  // ── Floor 0: orientation before missions ──
+  String get orientOf => t('Before missions', es: 'Antes de las misiones', pt: 'Antes das missões', ru: 'Перед миссиями');
+  String orientStepOf(int n) => t(
+        'Step $n of 3',
+        es: 'Paso $n de 3',
+        pt: 'Passo $n de 3',
+        ru: 'Шаг $n из 3',
+      );
+  String get orientChartTitle => t(
+        'This is a price chart',
+        es: 'Esto es un gráfico de precio',
+        pt: 'Isto é um gráfico de preço',
+        ru: 'Это график цены',
+      );
+  String get orientChartBody => t(
+        'Left to right — time. Up and down — price. Each bar is a moment of the market.',
+        es: 'De izquierda a derecha — tiempo. Arriba y abajo — precio. Cada barra es un momento del mercado.',
+        pt: 'Da esquerda para a direita — tempo. Para cima e para baixo — preço. Cada barra é um momento do mercado.',
+        ru: 'Слева направо — время. Вверх-вниз — цена. Каждый столбик — момент рынка.',
+      );
+  String get orientBtcTitle => t(
+        'What BTC/USDT means here',
+        es: 'Qué significa BTC/USDT aquí',
+        pt: 'O que BTC/USDT significa aqui',
+        ru: 'Что такое BTC/USDT здесь',
+      );
+  String get orientBtcBody => t(
+        'BTC is bitcoin. USDT is like dollars in the app. The number is how many practice dollars one bitcoin costs right now.',
+        es: 'BTC es bitcoin. USDT es como dólares en la app. El número es cuántos dólares de práctica cuesta un bitcoin ahora.',
+        pt: 'BTC é bitcoin. USDT é como dólares no app. O número é quantos dólares de prática custa um bitcoin agora.',
+        ru: 'BTC — биткоин. USDT — как доллары в приложении. Число — сколько учебных долларов стоит один биткоин сейчас.',
+      );
+  String get orientCandleTitle => t(
+        'This bar is a candle',
+        es: 'Esta barra es una vela',
+        pt: 'Esta barra é um candle',
+        ru: 'Этот столбик — свеча',
+      );
+  String get orientCandleBody => t(
+        'One candle shows how price moved in a short slice of time. Next we open it up: open, high, low, close.',
+        es: 'Una vela muestra cómo se movió el precio en un tramo corto. Luego la abrimos: open, high, low, close.',
+        pt: 'Um candle mostra como o preço se moveu num pedaço curto de tempo. Depois abrimos: open, high, low, close.',
+        ru: 'Одна свеча показывает, как цена двигалась за короткий отрезок времени. Дальше разберём её: open, high, low, close.',
+      );
+  String get orientNext => t('Got it', es: 'Entendido', pt: 'Entendi', ru: 'Понял');
+  String get orientToMissions => t(
+        'Break down the candle',
+        es: 'Desglosar la vela',
+        pt: 'Desmontar o candle',
+        ru: 'Разобрать свечу',
+      );
+  String get orientPriceNow => t('Price now', es: 'Precio ahora', pt: 'Preço agora', ru: 'Цена сейчас');
+
   // ── Phase 2: moves → paper → live ──
   String get bridgeCap => t(
         'Beginner path · done',
@@ -610,10 +663,17 @@ extension PathStrings on S {
         ru: 'Копия · движение 1',
       );
   String get moveCopyCoach => t(
-        'Tap Buy · Long when price is near this line again. The stop will sit below — like in the replay.',
-        es: 'Pulsa Buy · Long cuando el precio esté cerca de esta línea. El stop irá debajo — como en el replay.',
-        pt: 'Toque Buy · Long quando o preço estiver perto desta linha. O stop fica abaixo — como no replay.',
-        ru: 'Жми Buy · Long, когда цена снова у этой линии. Стоп система поставит ниже — как в реплее.',
+        'Tap Buy · Long at the bright cyan line labeled BUY. That is the bounce zone from the replay. Stop goes below it.',
+        es: 'Pulsa Buy · Long en la línea cian brillante marcada BUY. Esa es la zona del rebote del replay. El stop va debajo.',
+        pt: 'Toque Buy · Long na linha ciano marcada BUY. Essa é a zona do bounce do replay. O stop fica abaixo.',
+        ru: 'Жми Buy · Long у яркой голубой линии с подписью КУПИ. Это зона отскока из реплея. Стоп — ниже неё.',
+      );
+  String get moveBuyLine => t('BUY', es: 'BUY', pt: 'BUY', ru: 'КУПИ');
+  String get moveLookLine => t(
+        'Look at the cyan BUY line on the chart ↓',
+        es: 'Mira la línea cian BUY en el gráfico ↓',
+        pt: 'Olhe a linha ciano BUY no gráfico ↓',
+        ru: 'Смотри на голубую линию КУПИ на графике ↓',
       );
   String get movePaper => t('PAPER', es: 'PAPEL', pt: 'PAPEL', ru: 'БУМАГА');
   String get moveTargetLabel => t('Target', es: 'Objetivo', pt: 'Alvo', ru: 'Цель');

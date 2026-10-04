@@ -254,7 +254,7 @@ class _CopyPageState extends State<_CopyPage> {
                     decoration: BoxDecoration(
                       color: PlColors.surface,
                       borderRadius: BorderRadius.circular(PlRadius.lg),
-                      border: Border.all(color: PlColors.lineSoft),
+                      border: Border.all(color: open ? PlColors.lineSoft : PlColors.accent.withValues(alpha: 0.45)),
                     ),
                     clipBehavior: Clip.antiAlias,
                     child: candles.isEmpty
@@ -265,12 +265,21 @@ class _CopyPageState extends State<_CopyPage> {
                               entry: pos?.entry,
                               stop: _stopPlaced || (desk.tutorialStopSet) ? pos?.stop : null,
                               side: pos != null ? Side.long : null,
+                              // Bright BUY guide — “this line” from the coach text.
+                              guideLevel: open ? null : desk.move1BounceLine,
+                              guideTag: open ? null : s.moveBuyLine,
                             ),
                           ),
                   ),
-                  const SizedBox(height: 12),
-                  if (!open) CoachBubble(s.moveCopyCoach),
                   if (!open) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      s.moveLookLine,
+                      textAlign: TextAlign.center,
+                      style: pathMono(size: 12, color: PlColors.accent),
+                    ),
+                    const SizedBox(height: 12),
+                    CoachBubble(s.moveCopyCoach),
                     const SizedBox(height: 12),
                     PathCard(
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
