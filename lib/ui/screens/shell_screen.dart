@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:paper_league/l10n/s.dart';
+import 'package:paper_league/l10n/s_path.dart';
 import 'package:paper_league/services/desk_audio.dart';
 import 'package:paper_league/state/desk_controller.dart';
 import 'package:paper_league/theme/tokens.dart';
@@ -152,7 +153,10 @@ class _ShellScreenState extends State<ShellScreen> {
   @override
   Widget build(BuildContext context) {
     final s = S.of(context);
-    final unlocked = context.select((DeskController d) => d.tabsUnlocked);
+    final desk = context.watch<DeskController>();
+    final bookOk = desk.bookTabUnlocked;
+    final leagueOk = desk.leagueTabUnlocked;
+    final profileOk = desk.tabsUnlocked;
     return Scaffold(
       backgroundColor: PlColors.bg,
       body: SafeArea(
@@ -165,12 +169,17 @@ class _ShellScreenState extends State<ShellScreen> {
       bottomNavigationBar: _TerminalNav(
         index: _index,
         labels: [s.desk, s.book, s.league, s.you],
-        hints: [null, s.navBookHint, s.navLeagueHint, s.navYouHint],
-        unlocked: unlocked,
+        unlockedFlags: [true, bookOk, leagueOk, profileOk],
         onSelect: (i) {
           if (i == _index) return;
-          if (!unlocked && i != 0) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(s.tabsLocked)));
+          final flags = [true, bookOk, leagueOk, profileOk];
+          if (!flags[i]) {
+            final msg = i == 1
+                ? s.bookLockedHint
+                : i == 2
+                    ? s.leagueLockedHint
+                    : s.tabsLocked;
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
             return;
           }
           DeskAudio.instance.play(DeskSfx.tap);
@@ -187,14 +196,12 @@ class _TerminalNav extends StatelessWidget {
     required this.index,
     required this.labels,
     required this.onSelect,
-    this.hints = const [],
-    this.unlocked = true,
+    this.unlockedFlags = const [true, true, true, true],
   });
 
   final int index;
   final List<String> labels;
-  final List<String?> hints;
-  final bool unlocked;
+  final List<bool> unlockedFlags;
   final ValueChanged<int> onSelect;
 
   @override
@@ -226,6 +233,7 @@ class _TerminalNav extends StatelessWidget {
             children: List.generate(items.length, (i) {
               final on = index == i;
               final item = items[i];
+              final locked = i < unlockedFlags.length ? !unlockedFlags[i] : false;
               return Expanded(
                 child: InkWell(
                   borderRadius: BorderRadius.circular(PlRadius.md),
@@ -248,16 +256,16 @@ class _TerminalNav extends StatelessWidget {
                           scale: on ? 1.08 : 1,
                           duration: PlMotion.micro,
                           child: Icon(
-                            (!unlocked && i != 0) ? Icons.lock_outline : item.$1,
+                            locked ? Icons.lock_outline : item.$1,
                             size: 22,
                             color: on ? PlColors.accent : PlColors.faint,
                           ),
                         ),
                         const SizedBox(height: 3),
                         Text(
-                          (!unlocked && i != 0 && hints.length > i && hints[i] != null)
-                              ? hints[i]!
-                              : item.$2,
+                          item.$2,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             fontSize: 10,
                             fontWeight: on ? FontWeight.w800 : FontWeight.w500,

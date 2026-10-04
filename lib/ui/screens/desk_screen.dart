@@ -9,6 +9,7 @@ import 'package:paper_league/theme/tokens.dart';
 import 'package:paper_league/ui/format.dart';
 import 'package:paper_league/ui/beginner/beginner_flow.dart';
 import 'package:paper_league/ui/beginner/beginner_home.dart';
+import 'package:paper_league/ui/phase2/today_hub.dart';
 import 'package:paper_league/ui/widgets/candle_chart.dart';
 import 'package:paper_league/ui/widgets/daily_desk_strip.dart';
 import 'package:paper_league/ui/widgets/pulse_target.dart';
@@ -125,6 +126,8 @@ class _DeskScreenState extends State<DeskScreen> {
 
     final desk = context.watch<DeskController>();
     if (desk.beginnerPathActive) return const BeginnerHome();
+    // Phase 2: bridge + Today hub until habit roots — not a raw terminal dump.
+    if (!desk.fullTerminalUnlocked) return const Phase2Desk();
 
     return Stack(
       children: [

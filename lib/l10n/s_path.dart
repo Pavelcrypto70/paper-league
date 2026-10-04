@@ -468,10 +468,10 @@ extension PathStrings on S {
 
   // Day-3 community gate
   String d3Title(int days) => t(
-        '$days days of discipline in a row',
-        es: '$days días de disciplina seguidos',
-        pt: '$days dias de disciplina seguidos',
-        ru: '$days ${_ruDays(days)} дисциплины подряд',
+        'You copied the bounce for $days days',
+        es: 'Copiaste el rebote durante $days días',
+        pt: 'Você copiou o bounce por $days dias',
+        ru: 'Ты $days ${_ruDays(days)} копировал отскок',
       );
   String get d3StopStat => t(
         'trades with a stop',
@@ -487,16 +487,266 @@ extension PathStrings on S {
       );
   String get d3ClubLead => 'Desk Club';
   String get d3ClubBody => t(
-        ' — a community of practitioners. We share streaks, review weeks and ask questions. No signals.',
-        es: ' — una comunidad de practicantes. Compartimos rachas, revisamos semanas y hacemos preguntas. Sin señales.',
-        pt: ' — uma comunidade de praticantes. Compartilhamos sequências, revisamos semanas e tiramos dúvidas. Sem sinais.',
-        ru: ' — сообщество практиков. Делимся серией, разбираем недели, задаём вопросы. Без сигналов.',
+        ' — we trade the same bounce on a live account and review entries. No “buy now” signals.',
+        es: ' — operamos el mismo rebote en cuenta real y revisamos entradas. Sin señales de “compra ya”.',
+        pt: ' — operamos o mesmo bounce em conta real e revisamos entradas. Sem sinais de “compre agora”.',
+        ru: ' — торгуем тот же отскок на живом счёте и разбираем входы. Без сигналов «покупай сейчас».',
       );
   String get d3Join => t(
-        'Join Desk Club',
-        es: 'Unirme a Desk Club',
-        pt: 'Entrar no Desk Club',
-        ru: 'Вступить в Desk Club',
+        'Watch live review',
+        es: 'Ver el review en vivo',
+        pt: 'Ver o review ao vivo',
+        ru: 'Смотреть live-разбор',
+      );
+
+  // ── Phase 2: moves → paper → live ──
+  String get bridgeCap => t(
+        'Beginner path · done',
+        es: 'Ruta de principiante · hecha',
+        pt: 'Trilha de iniciante · feita',
+        ru: 'Путь новичка · закрыт',
+      );
+  String get bridgeTitle => t(
+        'Now we learn moves',
+        es: 'Ahora aprendemos movimientos',
+        pt: 'Agora aprendemos movimentos',
+        ru: 'Теперь учимся торговать движениями',
+      );
+  String get bridgeSub => t(
+        'Not every button at once. Today — one basic move you will later see live in Desk Club.',
+        es: 'No todos los botones a la vez. Hoy — un movimiento básico que luego verás en vivo en Desk Club.',
+        pt: 'Não todos os botões de uma vez. Hoje — um movimento básico que depois verá ao vivo no Desk Club.',
+        ru: 'Не все кнопки сразу. Сегодня — одно базовое движение, которое потом увидишь в клубе на живом счёте.',
+      );
+  String get bridgeChip => t(
+        'TODAY · 5 MIN',
+        es: 'HOY · 5 MIN',
+        pt: 'HOJE · 5 MIN',
+        ru: 'СЕГОДНЯ · 5 МИН',
+      );
+  String get bridgeMoveTitle => t(
+        'Move 1 · Bounce up',
+        es: 'Movimiento 1 · Rebote arriba',
+        pt: 'Movimento 1 · Bounce para cima',
+        ru: 'Движение 1 · Отскок вверх',
+      );
+  String get bridgeMoveBody => t(
+        'Watch the replay → copy on paper → set stop → close',
+        es: 'Miras el replay → copias en papel → pones stop → cierras',
+        pt: 'Assiste o replay → copia no papel → coloca stop → fecha',
+        ru: 'Смотришь реплей → повторяешь на бумаге → ставишь стоп → закрываешь',
+      );
+  String get bridgeCta => t(
+        'Watch the move',
+        es: 'Ver el movimiento',
+        pt: 'Ver o movimento',
+        ru: 'Смотреть движение',
+      );
+  String get bridgeLockBook => t(
+        'Journal · opens after the first copy',
+        es: 'Diario · se abre tras la primera copia',
+        pt: 'Diário · abre após a primeira cópia',
+        ru: 'Журнал · откроется после первой копии',
+      );
+  String get bridgeLockLeague => t(
+        'League · after 7 days of discipline',
+        es: 'Liga · tras 7 días de disciplina',
+        pt: 'Liga · após 7 dias de disciplina',
+        ru: 'Лига · после 7 дней дисциплины',
+      );
+  String get bridgeLockGloss => t(
+        'Glossary · when you already lived the words',
+        es: 'Glosario · cuando ya viviste las palabras',
+        pt: 'Glossário · quando já viveu as palavras',
+        ru: 'Глоссарий · когда слова уже прожил',
+      );
+
+  String get moveReplayLabel => t(
+        'Move 1 of 3 · replay',
+        es: 'Movimiento 1 de 3 · replay',
+        pt: 'Movimento 1 de 3 · replay',
+        ru: 'Движение 1 из 3 · реплей',
+      );
+  String get moveTitle => t(
+        'Bounce up',
+        es: 'Rebote arriba',
+        pt: 'Bounce para cima',
+        ru: 'Отскок вверх',
+      );
+  String get moveStep1 => t(
+        'Price came down to a horizontal line',
+        es: 'El precio bajó hasta una línea horizontal',
+        pt: 'O preço veio até uma linha horizontal',
+        ru: 'Цена пришла вниз к горизонтальной линии',
+      );
+  String get moveStep2 => t(
+        'It bounced up — here we bought Long',
+        es: 'Rebotó arriba — aquí compramos Long',
+        pt: 'Deu bounce para cima — aqui compramos Long',
+        ru: 'Отскочила вверх — здесь купили Long',
+      );
+  String get moveStep3 => t(
+        'Stop just below the line. Target higher',
+        es: 'Stop justo debajo de la línea. Objetivo más arriba',
+        pt: 'Stop logo abaixo da linha. Alvo mais alto',
+        ru: 'Стоп чуть ниже линии. Цель — выше',
+      );
+  String get moveStep4 => t(
+        'Price reached the target — we closed. Done',
+        es: 'Llegó al objetivo — cerramos. Listo',
+        pt: 'Chegou no alvo — fechamos. Pronto',
+        ru: 'Дошло до цели — закрыли. Готово',
+      );
+  String get moveReplayCta => t(
+        'Copy on paper',
+        es: 'Copiar en papel',
+        pt: 'Copiar no papel',
+        ru: 'Повторить на бумаге',
+      );
+  String get moveCopyLabel => t(
+        'Copy · move 1',
+        es: 'Copia · movimiento 1',
+        pt: 'Cópia · movimento 1',
+        ru: 'Копия · движение 1',
+      );
+  String get moveCopyCoach => t(
+        'Tap Buy · Long when price is near this line again. The stop will sit below — like in the replay.',
+        es: 'Pulsa Buy · Long cuando el precio esté cerca de esta línea. El stop irá debajo — como en el replay.',
+        pt: 'Toque Buy · Long quando o preço estiver perto desta linha. O stop fica abaixo — como no replay.',
+        ru: 'Жми Buy · Long, когда цена снова у этой линии. Стоп система поставит ниже — как в реплее.',
+      );
+  String get movePaper => t('PAPER', es: 'PAPEL', pt: 'PAPEL', ru: 'БУМАГА');
+  String get moveTargetLabel => t('Target', es: 'Objetivo', pt: 'Alvo', ru: 'Цель');
+  String get moveTargetHint => t(
+        'as in the replay',
+        es: 'como en el replay',
+        pt: 'como no replay',
+        ru: 'как в реплее',
+      );
+  String get moveOpened => t(
+        'Looks like the replay.',
+        es: 'Parece el replay.',
+        pt: 'Parece o replay.',
+        ru: 'Похоже на реплей.',
+      );
+  String get moveOpenedBody => t(
+        'Stop is on. Wait for the target or close by plan.',
+        es: 'El stop está puesto. Espera el objetivo o cierra según el plan.',
+        pt: 'O stop está no lugar. Espere o alvo ou feche pelo plano.',
+        ru: 'Стоп на месте. Жди цель или закрой по плану.',
+      );
+  String get moveCloseTarget => t(
+        'Close at target',
+        es: 'Cerrar en el objetivo',
+        pt: 'Fechar no alvo',
+        ru: 'Закрыть у цели',
+      );
+  String get moveCopyDoneTitle => t(
+        'Copy done',
+        es: 'Copia hecha',
+        pt: 'Cópia feita',
+        ru: 'Копия готова',
+      );
+  String get moveCopyDoneBody => t(
+        'You repeated the bounce on paper. Tomorrow — the same move. On day 3 we show it live.',
+        es: 'Repetiste el rebote en papel. Mañana — el mismo movimiento. El día 3 lo mostramos en vivo.',
+        pt: 'Você repetiu o bounce no papel. Amanhã — o mesmo movimento. No dia 3 mostramos ao vivo.',
+        ru: 'Ты повторил отскок на бумаге. Завтра — то же движение. На 3-й день покажем live.',
+      );
+  String get moveToToday => t(
+        'Go to Today',
+        es: 'Ir a Hoy',
+        pt: 'Ir para Hoje',
+        ru: 'К экрану Сегодня',
+      );
+
+  String get todayCap => t('Today', es: 'Hoy', pt: 'Hoje', ru: 'Сегодня');
+  String todayDayCap(String weekday, int day) => t(
+        '$weekday · day $day',
+        es: '$weekday · día $day',
+        pt: '$weekday · dia $day',
+        ru: '$weekday · день $day',
+      );
+  String get todayDeskTitle => 'Daily Desk';
+  String get todayDeskMins => t('4–7 min', es: '4–7 min', pt: '4–7 min', ru: '4–7 мин');
+  String get todayTask1 => t(
+        'Repeat “Bounce up” 1–2 times',
+        es: 'Repite “Rebote arriba” 1–2 veces',
+        pt: 'Repita “Bounce para cima” 1–2 vezes',
+        ru: 'Повтори движение «Отскок вверх» 1–2 раза',
+      );
+  String get todayTask2 => t(
+        'Each copy with a 1% stop',
+        es: 'Cada copia con stop del 1%',
+        pt: 'Cada cópia com stop de 1%',
+        ru: 'Каждая копия — со стопом 1%',
+      );
+  String get todayTask3 => t(
+        'Short recap at the end',
+        es: 'Un recap corto al final',
+        pt: 'Um recap curto no fim',
+        ru: 'Короткий разбор в конце',
+      );
+  String get todayStart => t(
+        'Start today',
+        es: 'Empezar hoy',
+        pt: 'Começar hoje',
+        ru: 'Начать сегодня',
+      );
+  String get todayReplay => t(
+        'Move 1 replay',
+        es: 'Replay del movimiento 1',
+        pt: 'Replay do movimento 1',
+        ru: 'Реплей движения 1',
+      );
+  String get todayReplaySub => t(
+        '30 sec · rewatch anytime',
+        es: '30 seg · se puede ver otra vez',
+        pt: '30 seg · pode rever',
+        ru: '30 сек · можно пересмотреть',
+      );
+  String get todayClubLocked => t(
+        'Desk Club live',
+        es: 'Desk Club live',
+        pt: 'Desk Club live',
+        ru: 'Desk Club live',
+      );
+  String get todayClubLockedSub => t(
+        'Opens on streak day 3',
+        es: 'Se abre el día 3 de racha',
+        pt: 'Abre no dia 3 da sequência',
+        ru: 'Откроется на 3-й день серии',
+      );
+  String get todayNeedMove => t(
+        'First copy the move — then Daily Desk opens fully',
+        es: 'Primero copia el movimiento — luego se abre el Daily Desk',
+        pt: 'Primeiro copie o movimento — depois o Daily Desk abre',
+        ru: 'Сначала скопируй движение — потом откроется Daily Desk',
+      );
+  String get todayFinish => t(
+        'Finish desk',
+        es: 'Terminar desk',
+        pt: 'Concluir desk',
+        ru: 'Завершить desk',
+      );
+  String get todaySessionCoach => t(
+        'Same bounce again. If the zone looks like the replay — enter. If not — skip. Skipping is discipline too.',
+        es: 'El mismo rebote. Si la zona parece el replay — entra. Si no — salta. Saltar también es disciplina.',
+        pt: 'O mesmo bounce. Se a zona parece o replay — entre. Se não — pule. Pular também é disciplina.',
+        ru: 'Это снова отскок вверх. Если зона похожа на реплей — входи. Если нет — пропусти. Пропуск тоже дисциплина.',
+      );
+  String get todaySkip => t('Skip', es: 'Saltar', pt: 'Pular', ru: 'Пропустить');
+  String get bookLockedHint => t(
+        'Journal opens after your first move copy',
+        es: 'El diario se abre tras tu primera copia',
+        pt: 'O diário abre após sua primeira cópia',
+        ru: 'Журнал откроется после первой копии движения',
+      );
+  String get leagueLockedHint => t(
+        'League opens after 7 days of discipline',
+        es: 'La liga se abre tras 7 días de disciplina',
+        pt: 'A liga abre após 7 dias de disciplina',
+        ru: 'Лига откроется после 7 дней дисциплины',
       );
 
   String _ruDays(int n) {

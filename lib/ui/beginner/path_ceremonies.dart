@@ -449,7 +449,7 @@ class CommunityGateScreen extends StatelessWidget {
                       Text(
                         s.d3Title(streak),
                         textAlign: TextAlign.center,
-                        style: pathTitleStyle(context, size: 30),
+                        style: pathTitleStyle(context, size: 26),
                       ),
                       const SizedBox(height: 18),
                       Row(

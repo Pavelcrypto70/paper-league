@@ -87,6 +87,18 @@ class DeskController extends ChangeNotifier {
   ClosedTrade? lastTutorialTrade;
   /// Daily Desk reminder hour picked after the first win (null = off).
   int? reminderHour;
+  /// Phase 2: bridge after beginner path ("what to do next").
+  bool phase2BridgeSeen = false;
+  /// Phase 2: user watched move-1 replay at least once.
+  bool move1ReplaySeen = false;
+  /// Phase 2: successful paper copies of move 1.
+  int move1Copies = 0;
+  /// Phase 2: guided copy trade open (like tutorial, separate from missions).
+  bool moveCopyTrade = false;
+  /// Phase 2: user is inside a Daily Desk session from Today hub (ephemeral).
+  bool todaySessionActive = false;
+  /// Phase 2: desks completed while in habit mode.
+  int habitDesksDone = 0;
   /// UI one-shot: shell should present first-win / community ceremonies.
   bool pendingFirstWinCeremony = false;
   bool pendingCommunityGate = false;
@@ -117,6 +129,25 @@ class DeskController extends ChangeNotifier {
   int get beginnerMissionsDone => beginnerPathStep.clamp(0, 5) >= 5
       ? 4
       : (beginnerPathStep - 1).clamp(0, 4);
+
+  bool get move1CopyDone => move1Copies >= 1;
+
+  /// Book opens after the first successful move copy.
+  bool get bookTabUnlocked => firstGestureDone && move1CopyDone;
+
+  /// League waits until a week of discipline (or 7 habit desks).
+  bool get leagueTabUnlocked =>
+      firstGestureDone && (meta.loginStreak >= 7 || habitDesksDone >= 7);
+
+  /// Full terminal (draw tools, free Short) after habit roots.
+  bool get fullTerminalUnlocked =>
+      firstGestureDone && move1CopyDone && (habitDesksDone >= 3 || meta.loginStreak >= 7);
+
+  /// Desk tab shows the Today hub instead of the raw terminal.
+  bool get showTodayHub =>
+      firstGestureDone && !beginnerPathActive && !fullTerminalUnlocked && !todaySessionActive;
+
+  bool get showPhase2Bridge => firstGestureDone && !beginnerPathActive && !phase2BridgeSeen;
 
   bool get hasScoredProcess => history.isNotEmpty && !tutorialTrade;
 
@@ -402,9 +433,14 @@ class DeskController extends ChangeNotifier {
     return n;
   }
 
-  static const _freshStamp = 'paper_league_fresh_20261004_beginner_v2';
+  static const _freshStamp = 'paper_league_fresh_20261005_phase2';
 
   static const _freshWipeKeys = [
+    'phase2BridgeSeen',
+    'move1ReplaySeen',
+    'move1Copies',
+    'habitDesksDone',
+    'moveCopyTrade',
     'tutorialRiskPct',
     'reminderHour',
     'firstGesture',
@@ -486,6 +522,11 @@ class DeskController extends ChangeNotifier {
     softAuthPromptSeen = _prefs?.getBool('softAuthPromptSeen') ?? false;
     tutorialRiskPct = _prefs?.getDouble('tutorialRiskPct') ?? 0.01;
     reminderHour = _prefs?.getInt('reminderHour');
+    phase2BridgeSeen = _prefs?.getBool('phase2BridgeSeen') ?? false;
+    move1ReplaySeen = _prefs?.getBool('move1ReplaySeen') ?? false;
+    move1Copies = _prefs?.getInt('move1Copies') ?? 0;
+    habitDesksDone = _prefs?.getInt('habitDesksDone') ?? 0;
+    moveCopyTrade = _prefs?.getBool('moveCopyTrade') ?? false;
     final storedStep = _prefs?.getInt('beginnerPathStep');
     if (storedStep != null) {
       beginnerPathStep = storedStep.clamp(0, 5);
@@ -1027,6 +1068,12 @@ class DeskController extends ChangeNotifier {
     await p.setBool('communityGateDismissed', communityGateDismissed);
     await p.setBool('firstWinCeremonySeen', firstWinCeremonySeen);
     await p.setBool('softAuthPromptSeen', softAuthPromptSeen);
+    await p.setBool('phase2BridgeSeen', phase2BridgeSeen);
+    await p.setBool('move1ReplaySeen', move1ReplaySeen);
+    await p.setInt('move1Copies', move1Copies);
+    await p.setInt('habitDesksDone', habitDesksDone);
+    await p.setBool('moveCopyTrade', moveCopyTrade);
+    if (tutorialRiskPct > 0) await p.setDouble('tutorialRiskPct', tutorialRiskPct);
     await p.setDouble('peakEquity', peakEquity);
     await p.setDouble('maxDrawdown', maxDrawdown);
     await p.setString('timeframe', timeframe);
@@ -1319,7 +1366,7 @@ class DeskController extends ChangeNotifier {
       _deferStops = false;
       return;
     }
-    if (tutorialTrade) return;
+    if (tutorialTrade || moveCopyTrade) return;
     final pos = position;
     if (pos == null) return;
     final c = books[pos.symbol];
@@ -1581,6 +1628,129 @@ class DeskController extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> markPhase2BridgeSeen() async {
+    phase2BridgeSeen = true;
+    await _prefs?.setBool('phase2BridgeSeen', true);
+    Analytics.log('bridge_seen');
+    notifyListeners();
+  }
+
+  Future<void> markMove1ReplaySeen() async {
+    move1ReplaySeen = true;
+    await _prefs?.setBool('move1ReplaySeen', true);
+    Analytics.log('move_1_replay');
+    notifyListeners();
+  }
+
+  void startTodaySession() {
+    todaySessionActive = true;
+    notifyListeners();
+  }
+
+  void endTodaySession({bool countDesk = false}) {
+    todaySessionActive = false;
+    if (countDesk) {
+      habitDesksDone += 1;
+      unawaited(_prefs?.setInt('habitDesksDone', habitDesksDone));
+      unawaited(Analytics.log('daily_desk_complete', {'habit': habitDesksDone}));
+      _queueCommunityGateIfNeeded();
+    }
+    notifyListeners();
+  }
+
+  /// Open a guided Long for move-1 paper copy (fixed ~practice size, soft far stop).
+  Future<void> ensureMove1Trade() async {
+    if (position != null || candles.isEmpty) return;
+    final entry = mark;
+    if (entry <= 0) return;
+    final qty = tutorialQtyPreview;
+    if (qty <= 0) return;
+    final err = placeMarket(
+      side: Side.long,
+      riskPct: 0.01,
+      stop: entry * 0.55,
+      qtyOverride: qty,
+      tutorial: false,
+    );
+    if (err != null) return;
+    // placeMarket marks a normal trade as stop-ready; guided copy overrides that.
+    moveCopyTrade = true;
+    tutorialTrade = false;
+    tutorialStopSet = false;
+    await _prefs?.setBool('moveCopyTrade', true);
+    Analytics.log('move_1_trade_open');
+    notifyListeners();
+  }
+
+  void placeMove1Stop({double riskPct = 0.01}) {
+    final pos = position;
+    if (pos == null || !moveCopyTrade) return;
+    final next = tutorialStopFor(riskPct);
+    if (next == null || next <= 0) return;
+    pos.stop = next;
+    tutorialRiskPct = riskPct;
+    tutorialStopSet = true;
+    unawaited(_prefs?.setDouble('tutorialRiskPct', riskPct));
+    unawaited(_persist());
+    Analytics.log('move_1_stop');
+    notifyListeners();
+  }
+
+  ClosedTrade? _closeMoveCopy(Position pos, double? exitOverride) {
+    final exit = exitOverride ?? _markFor(pos.symbol);
+    final fee = exit * pos.qty * MarketFeed.feeRate;
+    final gross = pos.side == Side.long
+        ? (exit - pos.entry) * pos.qty
+        : (pos.entry - exit) * pos.qty;
+    final pnl = gross - fee;
+    cash += pos.qty * pos.entry + gross - fee;
+    final snap = _buildTapeSnapshot(pos, exit);
+    final trade = ClosedTrade(
+      id: pos.id,
+      symbol: pos.symbol,
+      side: pos.side,
+      qty: pos.qty,
+      entry: pos.entry,
+      exit: exit,
+      pnl: pnl,
+      rMultiple: pos.rMultiple(exit),
+      openedAt: pos.openedAt,
+      closedAt: DateTime.now(),
+      flags: const {RecapFlag.stopSet, RecapFlag.sizeOk, RecapFlag.noWiden, RecapFlag.noRevenge},
+      scoreDelta: 6,
+      tip: 'Move copy done. Same motion you will see live in Desk Club.',
+      stop: pos.stop,
+      tp: pos.tp,
+      mfe: snap.mfe,
+      mae: snap.mae,
+      exitKind: TradeExitKind.manual,
+      tape: snap.tape,
+      entryIndex: snap.entryIndex,
+      exitIndex: snap.exitIndex,
+    );
+    history.insert(0, trade);
+    lastRecap = null;
+    pendingShareRitual = null;
+    position = null;
+    moveCopyTrade = false;
+    tutorialStopSet = false;
+    move1Copies += 1;
+    unawaited(_prefs?.setBool('moveCopyTrade', false));
+    unawaited(_prefs?.setInt('move1Copies', move1Copies));
+    unawaited(Analytics.log('move_1_copy', {'n': move1Copies}));
+    if (daily.plannedTrade == false) {
+      unawaited(markDailyPlannedTrade());
+    }
+    if (!daily.cleanStop) {
+      unawaited(markDailyCleanStop());
+    }
+    unawaited(_persist());
+    pendingJuice = pnl >= 0 ? 'win' : 'loss';
+    unawaited(DeskAudio.instance.play(pnl >= 0 ? DeskSfx.win : DeskSfx.tap));
+    notifyListeners();
+    return trade;
+  }
+
   Future<void> completeFirstGesture({bool queueCeremonies = true}) async {
     firstGestureDone = true;
     tutorialTrade = false;
@@ -1665,8 +1835,11 @@ class DeskController extends ChangeNotifier {
       return;
     }
     final streak = meta.loginStreak;
-    final canShow = (!communityGateShown && streak >= 3) ||
-        (communityGateDismissed && !communityGateAccepted && streak >= 7);
+    // Day-3 gate only after the user has copied the move at least twice.
+    final ready = move1Copies >= 2;
+    final canShow = ready &&
+        ((!communityGateShown && streak >= 3) ||
+            (communityGateDismissed && !communityGateAccepted && streak >= 7));
     pendingCommunityGate = canShow;
   }
 
@@ -1710,6 +1883,9 @@ class DeskController extends ChangeNotifier {
     if (pos == null) return null;
     if (tutorialTrade) {
       return _closeTutorial(pos, exitOverride);
+    }
+    if (moveCopyTrade) {
+      return _closeMoveCopy(pos, exitOverride);
     }
     final exit = exitOverride ?? _markFor(pos.symbol);
     final exitKind = kind ?? TradeExitKind.manual;
@@ -1899,6 +2075,12 @@ class DeskController extends ChangeNotifier {
     communityGateDismissed = false;
     firstWinCeremonySeen = false;
     softAuthPromptSeen = false;
+    phase2BridgeSeen = false;
+    move1ReplaySeen = false;
+    move1Copies = 0;
+    habitDesksDone = 0;
+    moveCopyTrade = false;
+    todaySessionActive = false;
     pendingFirstWinCeremony = false;
     pendingCommunityGate = false;
     equityCurve
