@@ -5,6 +5,7 @@ import 'package:paper_league/state/desk_controller.dart';
 import 'package:paper_league/theme/tokens.dart';
 import 'package:paper_league/ui/beginner/path_kit.dart';
 import 'package:paper_league/ui/phase2/move1_flow.dart';
+import 'package:paper_league/ui/phase3/journey_map.dart';
 import 'package:provider/provider.dart';
 
 const _wdRu = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
@@ -254,6 +255,8 @@ class _TodayHub extends StatelessWidget {
             ],
           ),
         ),
+        const SizedBox(height: 12),
+        const JourneyMap(),
       ],
     );
   }

@@ -977,6 +977,193 @@ extension PathStrings on S {
         ru: 'Лига откроется после 7 дней дисциплины',
       );
 
+  // ── Phase 3: week done → League + terminal tour ──
+  String get p3Cap => t(
+        'Week complete',
+        es: 'Semana completa',
+        pt: 'Semana completa',
+        ru: 'Неделя закрыта',
+      );
+  String p3StepOf(int n) => t(
+        'Step $n of 4',
+        es: 'Paso $n de 4',
+        pt: 'Passo $n de 4',
+        ru: 'Шаг $n из 4',
+      );
+  String get p3Title0 => t(
+        'You built the habit',
+        es: 'Construiste el hábito',
+        pt: 'Você construiu o hábito',
+        ru: 'Ты собрал привычку',
+      );
+  String get p3Body0 => t(
+        'Seven Daily Desks. Same bounce, stop every time. Next — League: compete on process, not luck.',
+        es: 'Siete Daily Desks. Mismo rebote, stop siempre. Siguiente — Liga: compite por proceso, no por suerte.',
+        pt: 'Sete Daily Desks. Mesmo bounce, stop sempre. Próximo — Liga: dispute por processo, não por sorte.',
+        ru: 'Семь Daily Desk. Тот же отскок, стоп каждый раз. Дальше — Лига: соревнуемся в процессе, не в удаче.',
+      );
+  String get p3Title1 => t(
+        'What League is',
+        es: 'Qué es la Liga',
+        pt: 'O que é a Liga',
+        ru: 'Что такое Лига',
+      );
+  String get p3Body1 => t(
+        'Weekly board. XP for desks with a stop and copies that look like the replay. All-in luck does not feed rank.',
+        es: 'Tabla semanal. XP por desks con stop y copias parecidas al replay. La suerte all-in no sube el rango.',
+        pt: 'Placar semanal. XP por desks com stop e cópias parecidas com o replay. Sorte all-in não sobe o rank.',
+        ru: 'Таблица недели. XP за desk со стопом и копии, похожие на реплей. All-in на удачу рейтинг не кормит.',
+      );
+  String get p3LeaguePoint1 => t(
+        'Score = discipline process',
+        es: 'Puntos = proceso disciplinado',
+        pt: 'Pontos = processo disciplinado',
+        ru: 'Очки = дисциплина процесса',
+      );
+  String get p3LeaguePoint2 => t(
+        'Season clock · 28 days',
+        es: 'Reloj de temporada · 28 días',
+        pt: 'Relógio da season · 28 dias',
+        ru: 'Сезон · 28 дней',
+      );
+  String get p3LeaguePoint3 => t(
+        'You vs peers who also practiced',
+        es: 'Tú vs pares que también practicaron',
+        pt: 'Você vs pares que também praticaram',
+        ru: 'Ты против таких же, кто тоже практиковал',
+      );
+  String get p3Title2 => t(
+        'Four tabs — what each does',
+        es: 'Cuatro pestañas — qué hace cada una',
+        pt: 'Quatro abas — o que cada uma faz',
+        ru: 'Четыре вкладки — зачем каждая',
+      );
+  String get p3TabDesk => t(
+        'Desk — chart + Daily Desk + trades',
+        es: 'Desk — gráfico + Daily Desk + operaciones',
+        pt: 'Desk — gráfico + Daily Desk + operações',
+        ru: 'Деск — график + Daily Desk + сделки',
+      );
+  String get p3TabBook => t(
+        'Book — your closed trades & journal',
+        es: 'Book — operaciones cerradas y diario',
+        pt: 'Book — operações fechadas e diário',
+        ru: 'Книга — закрытые сделки и журнал',
+      );
+  String get p3TabLeague => t(
+        'League — week board & season',
+        es: 'Liga — tabla de la semana y temporada',
+        pt: 'Liga — placar da semana e season',
+        ru: 'Лига — таблица недели и сезон',
+      );
+  String get p3TabYou => t(
+        'You — profile, streak, reminder, language',
+        es: 'Tú — perfil, racha, recordatorio, idioma',
+        pt: 'Você — perfil, sequência, lembrete, idioma',
+        ru: 'Вы — профиль, серия, напоминание, язык',
+      );
+  String get p3Title3 => t(
+        'Desk buttons you’ll use',
+        es: 'Botones del Desk que usarás',
+        pt: 'Botões do Desk que você usará',
+        ru: 'Кнопки Деска, которыми пользуешься',
+      );
+  String get p3BtnLong => t(
+        'Buy · Long — practice if the bounce looks like the replay',
+        es: 'Buy · Long — practica si el rebote parece el replay',
+        pt: 'Buy · Long — pratique se o bounce parecer o replay',
+        ru: 'Buy · Long — входи, если отскок похож на реплей',
+      );
+  String get p3BtnShort => t(
+        'Short — unlocked carefully; still with a stop',
+        es: 'Short — se abre con cuidado; siempre con stop',
+        pt: 'Short — abre com cuidado; sempre com stop',
+        ru: 'Short — откроется осторожно; всё равно со стопом',
+      );
+  String get p3BtnDesk => t(
+        'Daily Desk strip — still your 4–7 min ritual every day',
+        es: 'Daily Desk — sigue siendo tu ritual de 4–7 min al día',
+        pt: 'Daily Desk — continua seu ritual de 4–7 min por dia',
+        ru: 'Daily Desk — по-прежнему ритуал 4–7 минут каждый день',
+      );
+  String get p3Next => t('Got it', es: 'Entendido', pt: 'Entendi', ru: 'Понял');
+  String get p3ToLeague => t(
+        'Open League',
+        es: 'Abrir Liga',
+        pt: 'Abrir Liga',
+        ru: 'Открыть Лигу',
+      );
+  String get p3LeagueCoach => t(
+        'You’re here because you repeated moves. Rank moves on process XP — not on one lucky candle.',
+        es: 'Estás aquí porque repetiste movimientos. El rango mueve XP de proceso — no una vela de suerte.',
+        pt: 'Você está aqui porque repetiu movimentos. O rank move XP de processo — não um candle de sorte.',
+        ru: 'Ты здесь, потому что повторял движения. Ранг двигает XP за процесс — не одна везучая свеча.',
+      );
+
+  // League screen explainer
+  String get liTitle => t(
+        'How to read League',
+        es: 'Cómo leer la Liga',
+        pt: 'Como ler a Liga',
+        ru: 'Как читать Лигу',
+      );
+  String get liYou => t(
+        'Your card — rank, XP and what moved it',
+        es: 'Tu tarjeta — rango, XP y qué lo movió',
+        pt: 'Seu card — rank, XP e o que o moveu',
+        ru: 'Твоя карточка — место, XP и что его сдвинуло',
+      );
+  String get liScore => t(
+        'Score breakdown — stop, size, no revenge = XP',
+        es: 'Desglose — stop, tamaño, sin revancha = XP',
+        pt: 'Detalhe — stop, tamanho, sem revanche = XP',
+        ru: 'Разбор очков — стоп, размер, без отыгрыша = XP',
+      );
+  String get liFeed => t(
+        'Live feed — what other players just closed',
+        es: 'Feed en vivo — qué cerraron otros jugadores',
+        pt: 'Feed ao vivo — o que outros jogadores fecharam',
+        ru: 'Лента — что сейчас закрыли другие игроки',
+      );
+  String get liBoard => t(
+        'Podium & standings — weekly board, resets with the season',
+        es: 'Podio y tabla — semanal, se reinicia con la temporada',
+        pt: 'Pódio e tabela — semanal, reinicia com a season',
+        ru: 'Пьедестал и таблица — неделя, обнуляется с сезоном',
+      );
+  String get liHowUp => t(
+        'How to climb: close today’s Daily Desk with a stop. That’s it.',
+        es: 'Cómo subir: cierra el Daily Desk de hoy con stop. Eso es todo.',
+        pt: 'Como subir: feche o Daily Desk de hoje com stop. Só isso.',
+        ru: 'Как подняться: закрой сегодняшний Daily Desk со стопом. Всё.',
+      );
+  String get liOk => t('Clear', es: 'Claro', pt: 'Entendi', ru: 'Понятно');
+  String get liToDesk => t(
+        'To Daily Desk',
+        es: 'Al Daily Desk',
+        pt: 'Para o Daily Desk',
+        ru: 'К Daily Desk',
+      );
+
+  // Journey roadmap
+  String get jmTitle => t('Your path', es: 'Tu ruta', pt: 'Sua trilha', ru: 'Твой путь');
+  String jmStage(int i) => switch (i) {
+        0 => t('Basics · 4 missions', es: 'Base · 4 misiones', pt: 'Base · 4 missões', ru: 'Основы · 4 миссии'),
+        1 => t('Move 1 · bounce', es: 'Mov. 1 · rebote', pt: 'Mov. 1 · bounce', ru: 'Движение 1 · отскок'),
+        2 => t('Habit week · 7 desks', es: 'Semana de hábito · 7 desks', pt: 'Semana de hábito · 7 desks', ru: 'Неделя привычки · 7 desk'),
+        3 => t('League week', es: 'Semana de Liga', pt: 'Semana de Liga', ru: 'Неделя Лиги'),
+        4 => t('Short + Tape Drill', es: 'Short + Tape Drill', pt: 'Short + Tape Drill', ru: 'Short + Tape Drill'),
+        _ => t('Season · 28 days', es: 'Temporada · 28 días', pt: 'Season · 28 dias', ru: 'Сезон · 28 дней'),
+      };
+  String jmUnlock(int i) => switch (i) {
+        0 => t('candle → Long → stop → recap', es: 'vela → Long → stop → recap', pt: 'candle → Long → stop → recap', ru: 'свеча → Long → стоп → разбор'),
+        1 => t('replay → paper copy', es: 'replay → copia en papel', pt: 'replay → cópia no papel', ru: 'реплей → копия на бумаге'),
+        2 => t('day 3: Desk Club live · day 7: League', es: 'día 3: Desk Club · día 7: Liga', pt: 'dia 3: Desk Club · dia 7: Liga', ru: 'день 3: клуб live · день 7: Лига'),
+        3 => t('desks 8–14 · rank on process XP', es: 'desks 8–14 · rango por XP', pt: 'desks 8–14 · rank por XP', ru: 'desk 8–14 · ранг за XP процесса'),
+        4 => t('desks 15–21 · League tab → Tape Drill', es: 'desks 15–21 · Liga → Tape Drill', pt: 'desks 15–21 · Liga → Tape Drill', ru: 'desk 15–21 · вкладка Лига → Tape Drill'),
+        _ => t('desks 22–28 · season finale + titles', es: 'desks 22–28 · final + títulos', pt: 'desks 22–28 · final + títulos', ru: 'desk 22–28 · финал сезона + титулы'),
+      };
+
   String _ruDays(int n) {
     final m10 = n % 10;
     final m100 = n % 100;

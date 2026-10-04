@@ -7,10 +7,12 @@ import 'package:paper_league/domain/models.dart';
 import 'package:paper_league/domain/season.dart';
 import 'package:paper_league/domain/daily_desk.dart';
 import 'package:paper_league/l10n/s.dart';
+import 'package:paper_league/l10n/s_path.dart';
 import 'package:paper_league/services/desk_audio.dart';
 import 'package:paper_league/state/auth_controller.dart';
 import 'package:paper_league/state/desk_controller.dart';
 import 'package:paper_league/theme/tokens.dart';
+import 'package:paper_league/ui/beginner/path_kit.dart';
 import 'package:paper_league/ui/format.dart';
 import 'package:paper_league/ui/screens/tape_drill_screen.dart';
 import 'package:paper_league/ui/widgets/pl_chrome.dart';
@@ -73,6 +75,16 @@ class _LeagueScreenState extends State<LeagueScreen> with SingleTickerProviderSt
         padding: const EdgeInsets.fromLTRB(PlSpace.lg, PlSpace.md, PlSpace.lg, 40),
         children: [
           _SeasonHeader(season: season, remLabel: remLabel, s: s, live: desk.leagueIsLive),
+          if (!desk.leagueIntroSeen) ...[
+            const SizedBox(height: PlSpace.md),
+            _LeagueIntro(
+              onOk: desk.markLeagueIntroSeen,
+              onDesk: () {
+                desk.markLeagueIntroSeen();
+                desk.requestShellTab(0);
+              },
+            ),
+          ],
           if (!desk.leagueIsLive)
             Padding(
               padding: const EdgeInsets.only(top: 8),
@@ -180,6 +192,54 @@ class _LeagueScreenState extends State<LeagueScreen> with SingleTickerProviderSt
                   },
                 ),
               ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// First-visit explainer: what each League block means and how to climb.
+class _LeagueIntro extends StatelessWidget {
+  const _LeagueIntro({required this.onOk, required this.onDesk});
+  final VoidCallback onOk;
+  final VoidCallback onDesk;
+
+  @override
+  Widget build(BuildContext context) {
+    final s = S.of(context);
+    final rows = [
+      (Icons.badge_outlined, s.liYou),
+      (Icons.fact_check_outlined, s.liScore),
+      (Icons.bolt_rounded, s.liFeed),
+      (Icons.leaderboard_rounded, s.liBoard),
+    ];
+    return PathCard(
+      accent: true,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(s.liTitle, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: PlColors.text)),
+          const SizedBox(height: 12),
+          for (final (icon, text) in rows) ...[
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(icon, size: 18, color: PlColors.accent),
+                const SizedBox(width: 10),
+                Expanded(child: Text(text, style: const TextStyle(fontSize: 14, height: 1.4, color: PathInk.body))),
+              ],
+            ),
+            const SizedBox(height: 10),
+          ],
+          CoachBubble(s.liHowUp),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(child: PathButton(s.liOk, tone: PathButtonTone.ghost, height: 46, onPressed: onOk)),
+              const SizedBox(width: 10),
+              Expanded(child: PathButton(s.liToDesk, height: 46, onPressed: onDesk)),
             ],
           ),
         ],

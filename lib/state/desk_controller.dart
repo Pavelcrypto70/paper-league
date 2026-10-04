@@ -92,6 +92,14 @@ class DeskController extends ChangeNotifier {
   int? reminderHour;
   /// Phase 2: bridge after beginner path ("what to do next").
   bool phase2BridgeSeen = false;
+  /// Phase 3: week-done bridge that explains League + tabs before free terminal.
+  bool phase3BridgeSeen = false;
+  /// Phase 3 coach step inside the bridge (0..n).
+  int phase3Step = 0;
+  /// Shell should switch to this bottom-tab index once (0 desk / 1 book / 2 league / 3 you).
+  int? pendingShellTab;
+  /// League screen explainer dismissed.
+  bool leagueIntroSeen = false;
   /// Phase 2: user watched move-1 replay at least once.
   bool move1ReplaySeen = false;
   /// Phase 2: successful paper copies of move 1.
@@ -181,20 +189,36 @@ class DeskController extends ChangeNotifier {
   /// Book opens after the first successful move copy.
   bool get bookTabUnlocked => firstGestureDone && move1CopyDone;
 
-  /// League waits until a week of discipline (or 7 habit desks).
-  bool get leagueTabUnlocked =>
-      firstGestureDone && (meta.loginStreak >= 7 || habitDesksDone >= 7);
-
-  /// Full free terminal only with a week of desks — same bar as League.
-  /// Day 3 unlocks Desk Club tease inside Today hub, NOT the raw trading cockpit.
-  bool get fullTerminalUnlocked =>
+  /// Seven Daily Desks (or 7-day streak) — habit roots planted.
+  bool get habitWeekDone =>
       firstGestureDone && move1CopyDone && (habitDesksDone >= 7 || meta.loginStreak >= 7);
+
+  /// League waits until a week of discipline (or 7 habit desks).
+  bool get leagueTabUnlocked => habitWeekDone;
+
+  /// Free terminal only after Phase 3 bridge explains League + tabs.
+  /// Day 3 unlocks Desk Club tease inside Today hub, NOT the raw cockpit.
+  bool get fullTerminalUnlocked => habitWeekDone && phase3BridgeSeen;
 
   /// Desk tab shows the Today hub instead of the raw terminal.
   bool get showTodayHub =>
-      firstGestureDone && !beginnerPathActive && !fullTerminalUnlocked && !todaySessionActive;
+      firstGestureDone && !beginnerPathActive && !habitWeekDone && !todaySessionActive;
 
   bool get showPhase2Bridge => firstGestureDone && !beginnerPathActive && !phase2BridgeSeen;
+
+  /// Week closed — walk the user into League before dumping them on the terminal.
+  bool get showPhase3Bridge => habitWeekDone && !phase3BridgeSeen;
+
+  /// Journey stage for the roadmap card:
+  /// 0 orientation+missions, 1 move 1, 2 habit week, 3 league week, 4 move pack B, 5 season.
+  int get journeyStage {
+    if (beginnerPathActive) return 0;
+    if (!move1CopyDone) return 1;
+    if (!habitWeekDone) return 2;
+    if (habitDesksDone < 14) return 3;
+    if (habitDesksDone < 21) return 4;
+    return 5;
+  }
 
   bool get hasScoredProcess => history.isNotEmpty && !tutorialTrade;
 
@@ -488,11 +512,14 @@ class DeskController extends ChangeNotifier {
     return n;
   }
 
-  static const _freshStamp = 'paper_league_fresh_20261005_flow_v2';
+  static const _freshStamp = 'paper_league_fresh_20261005_phase3';
 
   static const _freshWipeKeys = [
     'orientStep',
     'phase2BridgeSeen',
+    'phase3BridgeSeen',
+    'phase3Step',
+    'leagueIntroSeen',
     'move1ReplaySeen',
     'move1Copies',
     'habitDesksDone',
@@ -547,6 +574,37 @@ class DeskController extends ChangeNotifier {
     await p.setBool(_freshStamp, true);
   }
 
+  /// QA shortcut via URL (`?qa=fresh|day3|week|terminal`) so testers can reach late phases.
+  static Future<void> applyQaPreset(String? preset) async {
+    if (preset == null || preset.isEmpty) return;
+    final p = await SharedPreferences.getInstance();
+    final done = p.getString('qaPresetApplied');
+    if (done == preset) return;
+    for (final key in _freshWipeKeys) {
+      await p.remove(key);
+    }
+    if (preset != 'fresh') {
+      final desks = switch (preset) {
+        'day3' => 2,
+        'week' || 'terminal' => 7,
+        _ => 0,
+      };
+      await p.setBool('firstGesture', true);
+      await p.setInt('beginnerPathStep', 5);
+      await p.setInt('orientStep', 3);
+      await p.setBool('phase2BridgeSeen', true);
+      await p.setBool('move1ReplaySeen', true);
+      await p.setInt('move1Copies', desks > 0 ? 1 : 0);
+      await p.setInt('habitDesksDone', desks);
+      await p.setInt('habitViewDay', (desks + 1).clamp(1, 28));
+      if (preset == 'terminal') {
+        await p.setBool('phase3BridgeSeen', true);
+        await p.setInt('phase3Step', 4);
+      }
+    }
+    await p.setString('qaPresetApplied', preset);
+  }
+
   Future<void> _maybeFreshStart() async {
     await wipeLocalProgressIfNeeded();
   }
@@ -581,6 +639,9 @@ class DeskController extends ChangeNotifier {
     reminderHour = _prefs?.getInt('reminderHour');
     orientStep = (_prefs?.getInt('orientStep') ?? 0).clamp(0, 3);
     phase2BridgeSeen = _prefs?.getBool('phase2BridgeSeen') ?? false;
+    phase3BridgeSeen = _prefs?.getBool('phase3BridgeSeen') ?? false;
+    phase3Step = (_prefs?.getInt('phase3Step') ?? 0).clamp(0, 4);
+    leagueIntroSeen = _prefs?.getBool('leagueIntroSeen') ?? false;
     move1ReplaySeen = _prefs?.getBool('move1ReplaySeen') ?? false;
     move1Copies = _prefs?.getInt('move1Copies') ?? 0;
     habitDesksDone = _prefs?.getInt('habitDesksDone') ?? 0;
@@ -980,6 +1041,11 @@ class DeskController extends ChangeNotifier {
       _grantCredits(bonus, reason: 'daily_complete');
       _grantSeasonXp(25, reason: 'daily_complete');
       _bumpWeekly('dailies');
+      if (fullTerminalUnlocked) {
+        habitDesksDone += 1;
+        await _prefs?.setInt('habitDesksDone', habitDesksDone);
+        Analytics.log('daily_desk_complete', {'habit': habitDesksDone, 'stage': journeyStage});
+      }
     }
     notifyListeners();
   }
@@ -1135,6 +1201,8 @@ class DeskController extends ChangeNotifier {
     await p.setBool('softAuthPromptSeen', softAuthPromptSeen);
     await p.setInt('orientStep', orientStep);
     await p.setBool('phase2BridgeSeen', phase2BridgeSeen);
+    await p.setBool('phase3BridgeSeen', phase3BridgeSeen);
+    await p.setInt('phase3Step', phase3Step);
     await p.setBool('move1ReplaySeen', move1ReplaySeen);
     await p.setInt('move1Copies', move1Copies);
     await p.setInt('habitDesksDone', habitDesksDone);
@@ -1718,6 +1786,42 @@ class DeskController extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> advancePhase3() async {
+    if (phase3Step >= 4) return;
+    phase3Step += 1;
+    await _prefs?.setInt('phase3Step', phase3Step);
+    Analytics.log('phase3_step', {'step': phase3Step});
+    notifyListeners();
+  }
+
+  Future<void> completePhase3Bridge({int goToTab = 2}) async {
+    phase3BridgeSeen = true;
+    phase3Step = 4;
+    pendingShellTab = goToTab;
+    await _prefs?.setBool('phase3BridgeSeen', true);
+    await _prefs?.setInt('phase3Step', phase3Step);
+    Analytics.log('phase3_bridge_done', {'tab': goToTab});
+    notifyListeners();
+  }
+
+  Future<void> markLeagueIntroSeen() async {
+    leagueIntroSeen = true;
+    await _prefs?.setBool('leagueIntroSeen', true);
+    Analytics.log('league_intro_seen');
+    notifyListeners();
+  }
+
+  void requestShellTab(int tab) {
+    pendingShellTab = tab;
+    notifyListeners();
+  }
+
+  int? consumePendingShellTab() {
+    final t = pendingShellTab;
+    pendingShellTab = null;
+    return t;
+  }
+
   Future<void> markMove1ReplaySeen() async {
     move1ReplaySeen = true;
     await _prefs?.setBool('move1ReplaySeen', true);
@@ -2259,6 +2363,10 @@ class DeskController extends ChangeNotifier {
     softAuthPromptSeen = false;
     orientStep = 0;
     phase2BridgeSeen = false;
+    phase3BridgeSeen = false;
+    phase3Step = 0;
+    pendingShellTab = null;
+    leagueIntroSeen = false;
     move1ReplaySeen = false;
     move1Copies = 0;
     habitDesksDone = 0;

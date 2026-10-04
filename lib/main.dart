@@ -16,6 +16,7 @@ import 'package:paper_league/ui/screens/splash_screen.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await DeskController.wipeLocalProgressIfNeeded();
+  await DeskController.applyQaPreset(Uri.base.queryParameters['qa']);
   await Analytics.init();
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(

@@ -57,6 +57,14 @@ class _ShellScreenState extends State<ShellScreen> {
     final desk = _desk;
     if (desk == null || !mounted) return;
 
+    final tab = desk.pendingShellTab;
+    if (tab != null) {
+      desk.consumePendingShellTab();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) setState(() => _index = tab.clamp(0, _pages.length - 1));
+      });
+    }
+
     final trade = desk.lastRecap;
     if (trade != null && !_recapOpen) {
       desk.consumeRecap();
