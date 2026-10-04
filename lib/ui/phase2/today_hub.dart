@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:paper_league/config/app_links.dart';
 import 'package:paper_league/l10n/s.dart';
 import 'package:paper_league/l10n/s_path.dart';
 import 'package:paper_league/state/desk_controller.dart';
 import 'package:paper_league/theme/tokens.dart';
+import 'package:paper_league/ui/beginner/path_ceremonies.dart';
 import 'package:paper_league/ui/beginner/path_kit.dart';
 import 'package:paper_league/ui/phase2/move1_flow.dart';
 import 'package:paper_league/ui/phase3/journey_map.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 const _wdRu = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
 const _wdEn = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -207,10 +210,7 @@ class _TodayHub extends StatelessWidget {
         const SizedBox(height: 12),
         PathCard(
           child: InkWell(
-            onTap: () {
-              pathTap();
-              openMove1Flow(context);
-            },
+            onTap: () => _runDesk(context, desk),
             borderRadius: BorderRadius.circular(PlRadius.lg),
             child: Row(
               children: [
@@ -232,27 +232,55 @@ class _TodayHub extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         PathCard(
-          dim: desk.meta.loginStreak < 3 && dayNum < 3,
-          child: Row(
-            children: [
-              Icon(
-                (desk.meta.loginStreak >= 3 && desk.move1Copies >= 2) || dayNum >= 3
-                    ? Icons.send_rounded
-                    : Icons.lock_outline_rounded,
-                size: 20,
-                color: PlColors.faint,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(s.todayClubLocked, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
-                    Text(s.todayClubLockedSub, style: const TextStyle(fontSize: 12, color: PlColors.muted)),
-                  ],
+          dim: !desk.deskClubReady && !desk.communityGateAccepted,
+          child: InkWell(
+            onTap: () async {
+              pathTap();
+              final d = context.read<DeskController>();
+              if (!d.deskClubReady && !d.communityGateAccepted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(s.todayClubLockedSub)),
+                );
+                return;
+              }
+              await d.openDeskClubInvite();
+              if (!context.mounted) return;
+              if (d.communityGateAccepted) {
+                await launchUrl(Uri.parse(AppLinks.communityUrl), mode: LaunchMode.externalApplication);
+                return;
+              }
+              await maybeShowCommunityGate(context);
+            },
+            borderRadius: BorderRadius.circular(PlRadius.lg),
+            child: Row(
+              children: [
+                Icon(
+                  desk.deskClubReady || desk.communityGateAccepted
+                      ? Icons.send_rounded
+                      : Icons.lock_outline_rounded,
+                  size: 20,
+                  color: desk.deskClubReady || desk.communityGateAccepted ? PlColors.accent : PlColors.faint,
                 ),
-              ),
-            ],
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(s.todayClubLocked, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+                      Text(
+                        desk.communityGateAccepted
+                            ? s.todayClubOpenSub
+                            : desk.deskClubReady
+                                ? s.todayClubReadySub
+                                : s.todayClubLockedSub,
+                        style: const TextStyle(fontSize: 12, color: PlColors.muted),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.chevron_right_rounded, color: PlColors.faint),
+              ],
+            ),
           ),
         ),
         const SizedBox(height: 12),

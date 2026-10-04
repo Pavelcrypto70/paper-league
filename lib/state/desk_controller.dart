@@ -190,8 +190,11 @@ class DeskController extends ChangeNotifier {
   bool get bookTabUnlocked => firstGestureDone && move1CopyDone;
 
   /// Seven Daily Desks (or 7-day streak) — habit roots planted.
-  bool get habitWeekDone =>
-      firstGestureDone && move1CopyDone && (habitDesksDone >= 7 || meta.loginStreak >= 7);
+  /// Habit week = 7 counted Daily Desks. Login streak is XP only — never a phase skip.
+  bool get habitWeekDone => firstGestureDone && move1CopyDone && habitDesksDone >= 7;
+
+  /// Desk Club invite gate (Telegram) — same rule as `_queueCommunityGateIfNeeded`.
+  bool get deskClubReady => move1Copies >= 2 && meta.loginStreak >= 3;
 
   /// League waits until a week of discipline (or 7 habit desks).
   bool get leagueTabUnlocked => habitWeekDone;
@@ -512,7 +515,7 @@ class DeskController extends ChangeNotifier {
     return n;
   }
 
-  static const _freshStamp = 'paper_league_fresh_20261005_phase3';
+  static const _freshStamp = 'paper_league_fresh_20261005_phase3b';
 
   static const _freshWipeKeys = [
     'orientStep',
@@ -563,6 +566,7 @@ class DeskController extends ChangeNotifier {
     'local_league_token',
     'local_league_uid',
     'league_upsert_queue',
+    'qaPresetApplied',
   ];
 
   static Future<void> wipeLocalProgressIfNeeded() async {
@@ -579,7 +583,7 @@ class DeskController extends ChangeNotifier {
     if (preset == null || preset.isEmpty) return;
     final p = await SharedPreferences.getInstance();
     final done = p.getString('qaPresetApplied');
-    if (done == preset) return;
+    if (done == preset && _qaPresetLooksApplied(p, preset)) return;
     for (final key in _freshWipeKeys) {
       await p.remove(key);
     }
@@ -589,20 +593,45 @@ class DeskController extends ChangeNotifier {
         'week' || 'terminal' => 7,
         _ => 0,
       };
+      // day3: 2 copies + streak 3 so Desk Club invite is actually testable.
+      final copies = switch (preset) {
+        'day3' => 2,
+        'week' || 'terminal' => 3,
+        _ => 1,
+      };
       await p.setBool('firstGesture', true);
       await p.setInt('beginnerPathStep', 5);
       await p.setInt('orientStep', 3);
       await p.setBool('phase2BridgeSeen', true);
       await p.setBool('move1ReplaySeen', true);
-      await p.setInt('move1Copies', desks > 0 ? 1 : 0);
+      await p.setInt('move1Copies', copies);
       await p.setInt('habitDesksDone', desks);
       await p.setInt('habitViewDay', (desks + 1).clamp(1, 28));
+      if (preset == 'day3') {
+        await p.setString(
+          'deskMeta',
+          jsonEncode(DeskMeta(loginStreak: 3, lastLoginDay: DailyDeskState.keyFor(DateTime.now().toUtc())).toJson()),
+        );
+      }
       if (preset == 'terminal') {
         await p.setBool('phase3BridgeSeen', true);
         await p.setInt('phase3Step', 4);
+        await p.setBool('leagueIntroSeen', false);
       }
     }
     await p.setString('qaPresetApplied', preset);
+  }
+
+  static bool _qaPresetLooksApplied(SharedPreferences p, String preset) {
+    final desks = p.getInt('habitDesksDone') ?? 0;
+    final first = p.getBool('firstGesture') ?? false;
+    return switch (preset) {
+      'fresh' => !first && desks == 0,
+      'day3' => first && desks >= 2,
+      'week' => first && desks >= 7 && !(p.getBool('phase3BridgeSeen') ?? false),
+      'terminal' => first && desks >= 7 && (p.getBool('phase3BridgeSeen') ?? false),
+      _ => false,
+    };
   }
 
   Future<void> _maybeFreshStart() async {
@@ -1203,6 +1232,7 @@ class DeskController extends ChangeNotifier {
     await p.setBool('phase2BridgeSeen', phase2BridgeSeen);
     await p.setBool('phase3BridgeSeen', phase3BridgeSeen);
     await p.setInt('phase3Step', phase3Step);
+    await p.setBool('leagueIntroSeen', leagueIntroSeen);
     await p.setBool('move1ReplaySeen', move1ReplaySeen);
     await p.setInt('move1Copies', move1Copies);
     await p.setInt('habitDesksDone', habitDesksDone);
@@ -2375,11 +2405,32 @@ class DeskController extends ChangeNotifier {
     todaySessionActive = false;
     pendingFirstWinCeremony = false;
     pendingCommunityGate = false;
+    meta = DeskMeta();
+    daily = DailyDeskState.empty(DateTime.now().toUtc());
     equityCurve
       ..clear()
       ..add(startingCash);
     await _persist();
+    await _persistMeta();
+    await _persistDaily();
+    await _prefs?.remove('qaPresetApplied');
     unawaited(syncLeagueScore(force: true));
+    notifyListeners();
+  }
+
+  /// Open Desk Club invite (or queue the gate). Used by Today hub card.
+  Future<void> openDeskClubInvite() async {
+    if (communityGateAccepted) {
+      Analytics.log('tg_cta_tap', {'source': 'today_hub', 'gate': 'accepted'});
+      notifyListeners();
+      return;
+    }
+    if (!deskClubReady) {
+      notifyListeners();
+      return;
+    }
+    pendingCommunityGate = true;
+    Analytics.log('desk_club_tap');
     notifyListeners();
   }
 

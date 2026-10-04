@@ -934,16 +934,28 @@ extension PathStrings on S {
         ru: '30 сек · можно пересмотреть',
       );
   String get todayClubLocked => t(
-        'Desk Club live',
-        es: 'Desk Club live',
-        pt: 'Desk Club live',
-        ru: 'Desk Club live',
+        'Desk Club',
+        es: 'Desk Club',
+        pt: 'Desk Club',
+        ru: 'Desk Club',
       );
   String get todayClubLockedSub => t(
-        'Opens on streak day 3',
-        es: 'Se abre el día 3 de racha',
-        pt: 'Abre no dia 3 da sequência',
-        ru: 'Откроется на 3-й день серии',
+        'After 2 copies and a 3-day streak — Telegram invite',
+        es: 'Tras 2 copias y racha de 3 — invitación a Telegram',
+        pt: 'Após 2 cópias e sequência de 3 — convite no Telegram',
+        ru: 'После 2 копий и стрика 3 дня — приглашение в Telegram',
+      );
+  String get todayClubReadySub => t(
+        'Invite ready — open Desk Club',
+        es: 'Invitación lista — abre Desk Club',
+        pt: 'Convite pronto — abra o Desk Club',
+        ru: 'Приглашение готово — открой Desk Club',
+      );
+  String get todayClubOpenSub => t(
+        'Open Telegram club',
+        es: 'Abrir club en Telegram',
+        pt: 'Abrir clube no Telegram',
+        ru: 'Открыть клуб в Telegram',
       );
   String get todayNeedMove => t(
         'First copy the move — then Daily Desk opens fully',
@@ -1152,15 +1164,15 @@ extension PathStrings on S {
         1 => t('Move 1 · bounce', es: 'Mov. 1 · rebote', pt: 'Mov. 1 · bounce', ru: 'Движение 1 · отскок'),
         2 => t('Habit week · 7 desks', es: 'Semana de hábito · 7 desks', pt: 'Semana de hábito · 7 desks', ru: 'Неделя привычки · 7 desk'),
         3 => t('League week', es: 'Semana de Liga', pt: 'Semana de Liga', ru: 'Неделя Лиги'),
-        4 => t('Short + Tape Drill', es: 'Short + Tape Drill', pt: 'Short + Tape Drill', ru: 'Short + Tape Drill'),
+        4 => t('Drills · Short practice', es: 'Drills · Short', pt: 'Drills · Short', ru: 'Дриллы · практика Short'),
         _ => t('Season · 28 days', es: 'Temporada · 28 días', pt: 'Season · 28 dias', ru: 'Сезон · 28 дней'),
       };
   String jmUnlock(int i) => switch (i) {
         0 => t('candle → Long → stop → recap', es: 'vela → Long → stop → recap', pt: 'candle → Long → stop → recap', ru: 'свеча → Long → стоп → разбор'),
         1 => t('replay → paper copy', es: 'replay → copia en papel', pt: 'replay → cópia no papel', ru: 'реплей → копия на бумаге'),
-        2 => t('day 3: Desk Club live · day 7: League', es: 'día 3: Desk Club · día 7: Liga', pt: 'dia 3: Desk Club · dia 7: Liga', ru: 'день 3: клуб live · день 7: Лига'),
+        2 => t('day 3: TG club invite · day 7: League', es: 'día 3: invite TG · día 7: Liga', pt: 'dia 3: convite TG · dia 7: Liga', ru: 'день 3: инвайт в TG · день 7: Лига'),
         3 => t('desks 8–14 · rank on process XP', es: 'desks 8–14 · rango por XP', pt: 'desks 8–14 · rank por XP', ru: 'desk 8–14 · ранг за XP процесса'),
-        4 => t('desks 15–21 · League tab → Tape Drill', es: 'desks 15–21 · Liga → Tape Drill', pt: 'desks 15–21 · Liga → Tape Drill', ru: 'desk 15–21 · вкладка Лига → Tape Drill'),
+        4 => t('desks 15–21 · Tape Drill + cautious Short', es: 'desks 15–21 · Tape Drill + Short', pt: 'desks 15–21 · Tape Drill + Short', ru: 'desk 15–21 · Tape Drill + осторожный Short'),
         _ => t('desks 22–28 · season finale + titles', es: 'desks 22–28 · final + títulos', pt: 'desks 22–28 · final + títulos', ru: 'desk 22–28 · финал сезона + титулы'),
       };
 
