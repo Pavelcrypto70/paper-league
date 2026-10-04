@@ -7,6 +7,7 @@ import 'package:paper_league/config/app_links.dart';
 import 'package:paper_league/data/league_repository.dart';
 import 'package:paper_league/data/market_feed.dart';
 import 'package:paper_league/domain/achievements.dart';
+import 'package:paper_league/domain/bounce_scenario.dart';
 import 'package:paper_league/domain/daily_desk.dart';
 import 'package:paper_league/domain/desk_meta.dart';
 import 'package:paper_league/domain/league_live.dart';
@@ -97,6 +98,9 @@ class DeskController extends ChangeNotifier {
   int move1Copies = 0;
   /// Phase 2: guided copy trade open (like tutorial, separate from missions).
   bool moveCopyTrade = false;
+  /// Teaching candles for move copy (distinct bounce chart per day).
+  List<Candle>? moveTeachCandles;
+  double? moveTeachBuy;
   /// Phase 2: user is inside a Daily Desk session from Today hub (ephemeral).
   bool todaySessionActive = false;
   /// Phase 2: desks completed while in habit mode.
@@ -179,9 +183,10 @@ class DeskController extends ChangeNotifier {
   bool get leagueTabUnlocked =>
       firstGestureDone && (meta.loginStreak >= 7 || habitDesksDone >= 7);
 
-  /// Full terminal (draw tools, free Short) after habit roots.
+  /// Full free terminal only with a week of desks — same bar as League.
+  /// Day 3 unlocks Desk Club tease inside Today hub, NOT the raw trading cockpit.
   bool get fullTerminalUnlocked =>
-      firstGestureDone && move1CopyDone && (habitDesksDone >= 3 || meta.loginStreak >= 7);
+      firstGestureDone && move1CopyDone && (habitDesksDone >= 7 || meta.loginStreak >= 7);
 
   /// Desk tab shows the Today hub instead of the raw terminal.
   bool get showTodayHub =>
@@ -205,7 +210,12 @@ class DeskController extends ChangeNotifier {
   double? _restoredMark;
 
   List<Candle> get candles => books[activeSymbol] ?? const [];
-  double get mark => candles.isEmpty ? 0 : candles.last.close;
+  double get mark {
+    if (moveCopyTrade && moveTeachCandles != null && moveTeachCandles!.isNotEmpty) {
+      return moveTeachCandles!.last.close;
+    }
+    return candles.isEmpty ? 0 : candles.last.close;
+  }
 
   /// Mark for any symbol book (positions must not use active chart mark).
   double markFor(String symbol) => _markFor(symbol);
@@ -224,6 +234,9 @@ class DeskController extends ChangeNotifier {
   }
 
   double _markFor(String symbol) {
+    if (moveCopyTrade && moveTeachCandles != null && moveTeachCandles!.isNotEmpty) {
+      return moveTeachCandles!.last.close;
+    }
     final c = books[symbol];
     if (c == null || c.isEmpty) return 0;
     return c.last.close;
@@ -1454,7 +1467,9 @@ class DeskController extends ChangeNotifier {
     bool tutorial = false,
   }) {
     if (position != null) return 'close_first';
-    if (candles.isEmpty) return 'no_data';
+    if (candles.isEmpty && (moveTeachCandles == null || moveTeachCandles!.isEmpty)) {
+      return 'no_data';
+    }
     final entry = entryOverride ?? mark;
     if (side == Side.long && stop >= entry) return 'stop_long';
     if (side == Side.short && stop <= entry) return 'stop_short';
@@ -1737,10 +1752,29 @@ class DeskController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Build / refresh a day-specific bounce chart for move replay + copy.
+  void prepareMoveTeach({int? day, int salt = 0}) {
+    final d = day ?? habitViewDay;
+    final base = (candles.isNotEmpty ? candles.last.close : 56000.0).clamp(1000.0, 1e7);
+    final scenario = BounceScenario.forDay(d, salt: salt + move1Copies);
+    moveTeachCandles = scenario.candles(base: base);
+    moveTeachBuy = scenario.buyPrice(base: base);
+    notifyListeners();
+  }
+
+  void clearMoveTeach() {
+    moveTeachCandles = null;
+    moveTeachBuy = null;
+  }
+
   /// Open a guided Long for move-1 paper copy (fixed ~practice size, soft far stop).
   Future<void> ensureMove1Trade() async {
-    if (position != null || candles.isEmpty) return;
-    final entry = mark;
+    if (position != null) return;
+    if (moveTeachCandles == null || moveTeachCandles!.isEmpty) {
+      prepareMoveTeach();
+    }
+    if (candles.isEmpty && (moveTeachCandles == null || moveTeachCandles!.isEmpty)) return;
+    final entry = moveTeachCandles?.last.close ?? mark;
     if (entry <= 0) return;
     final qty = tutorialQtyPreview;
     if (qty <= 0) return;
@@ -1749,6 +1783,7 @@ class DeskController extends ChangeNotifier {
       riskPct: 0.01,
       stop: entry * 0.55,
       qtyOverride: qty,
+      entryOverride: entry,
       tutorial: false,
     );
     if (err != null) return;
@@ -1776,7 +1811,8 @@ class DeskController extends ChangeNotifier {
   }
 
   ClosedTrade? _closeMoveCopy(Position pos, double? exitOverride) {
-    final exit = exitOverride ?? _markFor(pos.symbol);
+    // Teaching close: land near a small target above entry when no override.
+    final exit = exitOverride ?? (pos.entry * 1.012);
     final fee = exit * pos.qty * MarketFeed.feeRate;
     final gross = pos.side == Side.long
         ? (exit - pos.entry) * pos.qty
@@ -1813,6 +1849,7 @@ class DeskController extends ChangeNotifier {
     position = null;
     moveCopyTrade = false;
     tutorialStopSet = false;
+    clearMoveTeach();
     move1Copies += 1;
     unawaited(_prefs?.setBool('moveCopyTrade', false));
     unawaited(_prefs?.setInt('move1Copies', move1Copies));

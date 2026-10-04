@@ -81,16 +81,16 @@ class _TodayHub extends StatelessWidget {
 
   Future<void> _runDesk(BuildContext context, DeskController desk) async {
     pathTap(strong: true);
-    if (!desk.move1CopyDone) {
-      await openMove1Flow(context, startAtCopy: desk.move1ReplaySeen);
-      return;
-    }
     final before = desk.move1Copies;
-    await openMove1Flow(context, startAtCopy: true);
+    final alreadyLearned = desk.move1CopyDone;
+    // Always open via replay so each day shows a different bounce chart.
+    await openMove1Flow(context);
     if (!context.mounted) return;
-    final after = context.read<DeskController>().move1Copies;
-    if (after > before) {
-      context.read<DeskController>().endTodaySession(countDesk: true);
+    final d = context.read<DeskController>();
+    final after = d.move1Copies;
+    // First ever copy = lesson. Further copies close today's Daily Desk once.
+    if (after > before && alreadyLearned && !d.habitViewDayDone) {
+      d.endTodaySession(countDesk: true);
     }
   }
 

@@ -9,11 +9,15 @@ import 'package:paper_league/theme/tokens.dart';
 import 'package:paper_league/ui/beginner/path_kit.dart';
 import 'package:paper_league/ui/format.dart';
 import 'package:paper_league/ui/widgets/candle_chart.dart';
+import 'package:paper_league/domain/bounce_scenario.dart';
 import 'package:paper_league/domain/models.dart';
 import 'package:provider/provider.dart';
 
 Future<void> openMove1Flow(BuildContext context, {bool startAtCopy = false}) {
   pathTap(strong: true);
+  final desk = context.read<DeskController>();
+  // Fresh bounce chart for this day / copy count — never the same picture twice in a row.
+  desk.prepareMoveTeach(day: desk.habitViewDay, salt: desk.move1Copies);
   return Navigator.of(context).push<void>(
     PageRouteBuilder<void>(
       transitionDuration: PlMotion.emphasis,
@@ -48,15 +52,20 @@ class _Move1FlowScreenState extends State<Move1FlowScreen> {
   @override
   void initState() {
     super.initState();
-    _page = widget.startAtCopy ? 1 : 0;
+    // Always show today's bounce replay first so the chart is not a repeat.
+    // [startAtCopy] kept for call-site compat but intentionally ignored.
+    _page = widget.startAtCopy ? 0 : 0;
   }
 
   void _go(int p) => setState(() => _page = p);
 
   @override
   Widget build(BuildContext context) {
+    final desk = context.watch<DeskController>();
+    final scenario = BounceScenario.forDay(desk.habitViewDay, salt: desk.move1Copies);
     final page = switch (_page) {
       0 => _ReplayPage(
+          scenario: scenario,
           onNext: () async {
             await context.read<DeskController>().markMove1ReplaySeen();
             _go(1);
@@ -82,7 +91,8 @@ class _Move1FlowScreenState extends State<Move1FlowScreen> {
 }
 
 class _ReplayPage extends StatefulWidget {
-  const _ReplayPage({required this.onNext, required this.onClose});
+  const _ReplayPage({required this.scenario, required this.onNext, required this.onClose});
+  final BounceScenario scenario;
   final VoidCallback onNext;
   final VoidCallback onClose;
 
@@ -142,7 +152,9 @@ class _ReplayPageState extends State<_ReplayPage> with SingleTickerProviderState
                         borderRadius: BorderRadius.circular(PlRadius.lg),
                         border: Border.all(color: PlColors.lineSoft),
                       ),
-                      child: CustomPaint(painter: _MoveReplayPainter(t: _play.value)),
+                      child: CustomPaint(
+                        painter: _MoveReplayPainter(t: _play.value, scenario: widget.scenario),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 14),
@@ -214,7 +226,8 @@ class _CopyPageState extends State<_CopyPage> {
     final desk = context.watch<DeskController>();
     final pos = desk.position;
     final open = pos != null && desk.moveCopyTrade;
-    final candles = desk.candles;
+    final candles = desk.moveTeachCandles ?? desk.candles;
+    final guide = open ? null : (desk.moveTeachBuy ?? desk.move1BounceLine);
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
@@ -265,8 +278,8 @@ class _CopyPageState extends State<_CopyPage> {
                               entry: pos?.entry,
                               stop: _stopPlaced || (desk.tutorialStopSet) ? pos?.stop : null,
                               side: pos != null ? Side.long : null,
-                              // Bright BUY guide — “this line” from the coach text.
-                              guideLevel: open ? null : desk.move1BounceLine,
+                              // Bright BUY guide on THIS day's bounce chart.
+                              guideLevel: guide,
                               guideTag: open ? null : s.moveBuyLine,
                             ),
                           ),
@@ -446,32 +459,22 @@ class _StepRow extends StatelessWidget {
   }
 }
 
-/// Procedural bounce replay — zone, buy, stop, target reveal over time.
+/// Procedural bounce replay — shape comes from [BounceScenario] so days differ.
 class _MoveReplayPainter extends CustomPainter {
-  _MoveReplayPainter({required this.t});
+  _MoveReplayPainter({required this.t, required this.scenario});
   final double t;
+  final BounceScenario scenario;
 
   @override
   void paint(Canvas canvas, Size size) {
     final w = size.width;
     final h = size.height;
-    final n = 28;
+    final pts = scenario.points;
+    final n = pts.length;
     final slot = w / (n + 2);
     final path = <Offset>[];
     for (var i = 0; i < n; i++) {
-      final x = slot * (i + 1);
-      final phase = i / (n - 1);
-      // Down then bounce up
-      double yN;
-      if (phase < 0.45) {
-        yN = 0.28 + phase * 0.9;
-      } else if (phase < 0.55) {
-        yN = 0.68;
-      } else {
-        yN = 0.68 - (phase - 0.55) * 0.85;
-      }
-      yN += math.sin(i * 1.7) * 0.02;
-      path.add(Offset(x, h * yN.clamp(0.12, 0.88)));
+      path.add(Offset(slot * (i + 1), h * pts[i].clamp(0.1, 0.9)));
     }
 
     // candles
@@ -498,7 +501,7 @@ class _MoveReplayPainter extends CustomPainter {
       );
     }
 
-    final buyI = 14;
+    final buyI = scenario.buyIndex.clamp(0, path.length - 1);
     final buyY = path[buyI].dy;
     final stopY = buyY + h * 0.12;
     final tpY = buyY - h * 0.18;
@@ -555,5 +558,6 @@ class _MoveReplayPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _MoveReplayPainter oldDelegate) => oldDelegate.t != t;
+  bool shouldRepaint(covariant _MoveReplayPainter oldDelegate) =>
+      oldDelegate.t != t || oldDelegate.scenario.id != scenario.id;
 }
