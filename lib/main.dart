@@ -74,7 +74,9 @@ class _Root extends StatefulWidget {
 }
 
 class _RootState extends State<_Root> {
-  bool _splashDone = false;
+  /// QA presets (`?qa=…`) skip the promise splash — Flutter web automation
+  /// cannot reliably click canvas buttons.
+  bool _splashDone = Uri.base.queryParameters.containsKey('qa');
   bool _onlineBound = false;
   bool _autoGuestStarted = false;
 

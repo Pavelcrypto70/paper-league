@@ -515,7 +515,7 @@ class DeskController extends ChangeNotifier {
     return n;
   }
 
-  static const _freshStamp = 'paper_league_fresh_20261005_phase3b';
+  static const _freshStamp = 'paper_league_fresh_20261005_phase3c';
 
   static const _freshWipeKeys = [
     'orientStep',
@@ -587,6 +587,12 @@ class DeskController extends ChangeNotifier {
     for (final key in _freshWipeKeys) {
       await p.remove(key);
     }
+    // Skip language + legal gates for automated / QA browsers (Flutter canvas
+    // click automation is unreliable). Real users still see the gates on fresh.
+    await p.setString('lang', 'ru');
+    await p.setBool('lang_chosen_v1', true);
+    await p.setBool('disclaimer_accepted_v1', true);
+
     if (preset != 'fresh') {
       final desks = switch (preset) {
         'day3' => 2,
